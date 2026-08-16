@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Calculator from '../components/Calculator';
+import { useFavorites } from '../hooks/useFavorites';
+import { getOfferByLink } from '../data/offersRegistry';
+import HeartIcon from '../components/HeartIcon';
 import heroMascot from '../img_main/image-edited-free (carve.photos).png';
+import heroMascotMobile from '../images/enot__png.png';
 import catLoansIcon from '../img_main/cat-loans.png';
 import catDebitIcon from '../img_main/cat-debit.png';
 import catCreditIcon from '../img_main/cat-credit.png';
@@ -41,7 +45,7 @@ const OFFER_TABS = {
       { bank: 'ВТБ', type: 'Дебетовая карта', image: vtb, rate: 'Кешбэк до 3 000 ₽', sum: 'Бесплатная доставка', term: 'Бесплатно', payment: '—', link: 'https://fin-lg.com/aff_c?aff_id=145356&offer_id=7332&p=10695&erid=2W5zFJuUpi5' },
       { bank: 'Альфа-Банк', type: 'Апельсиновая карта', image: alfa, rate: 'Кешбэк до 7%', sum: 'Баллы до 100%', term: 'Бесплатно', payment: '—', link: 'https://fin-lg.com/aff_c?aff_id=145356&offer_id=7049&p=10695&erid=2W5zFHrdQPS' },
       { bank: 'МТС Деньги', type: 'Дебетовая карта', image: mts, rate: 'До 10 000 ₽', sum: '5% супермаркеты', term: '30% на связь', payment: '—', link: 'https://fin-lg.com/aff_c?aff_id=145356&offer_id=6766&p=10695&erid=2W5zFFy4MBv' },
-      { bank: 'Фора-Банк', type: 'Все включено', image: fora, rate: 'До 10 000 ₽', sum: 'До 40% партнёры', term: 'Бесплатно', payment: '—', link: 'https://go.leadgid.ru/aff_c?aff_id=145356&offer_id=6236&p=10695&erid=LjN8KXfdi' },
+      { bank: 'Фора-Банк', type: 'Все включено', image: fora, rate: 'До 10 000 ₽', sum: 'До 40% в магазинах', term: 'Бесплатно', payment: '—', link: 'https://go.leadgid.ru/aff_c?aff_id=145356&offer_id=6236&p=10695&erid=LjN8KXfdi' },
       { bank: 'Т-Банк', type: 'Drive', image: tin, rate: 'До 10% АЗС', sum: 'До 5% авто', term: '1% прочее', payment: '—', link: 'https://my.saleads.pro/s/dcJ8k?erid=2Vtzqvk9Tcz' },
     ],
   },
@@ -60,6 +64,7 @@ const OFFER_TABS = {
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState('consumer');
+  const { isFavorite, toggleFavorite } = useFavorites();
   const current = OFFER_TABS[activeTab];
 
   useEffect(() => {
@@ -140,12 +145,15 @@ const Home = () => {
 
           <div className="home-hero__stage">
             <div className="home-hero__visual">
-              <img
-                src={heroMascot}
-                alt=""
-                className="home-hero__mascot"
-                aria-hidden="true"
-              />
+              <picture className="home-hero__mascot-wrap">
+                <source media="(max-width: 768px)" srcSet={heroMascotMobile} />
+                <img
+                  src={heroMascot}
+                  alt=""
+                  className="home-hero__mascot"
+                  aria-hidden="true"
+                />
+              </picture>
               <div className="home-hero__calc">
                 <Calculator
                   title="Калькулятор кредита"
@@ -239,7 +247,11 @@ const Home = () => {
                 </tr>
               </thead>
               <tbody>
-                {current.items.map((item, index) => (
+                {current.items.map((item, index) => {
+                  const matched = getOfferByLink(item.link);
+                  const favId = matched?.id || item.link;
+                  const fav = isFavorite(favId);
+                  return (
                   <tr
                     key={`${activeTab}-${item.bank}-${index}`}
                     className="home-table__row-anim"
@@ -261,18 +273,29 @@ const Home = () => {
                     <td><strong>{item.payment}</strong></td>
                     <td>
                       <div className="home-table__actions">
-                        <a href={item.link} target="_blank" rel="noopener noreferrer" className="home-btn home-btn--primary home-btn--sm">
-                          Подробнее
-                        </a>
-                        <button type="button" className="home-fav" aria-label="В избранное">
-                          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-                            <path d="M12 20.5s-7.2-4.35-9.2-8.2C1.4 9.5 2.5 6.5 5.4 5.6c1.8-.55 3.7.15 4.8 1.55 1.1-1.4 3-2.1 4.8-1.55 2.9.9 4 3.9 2.6 6.7-2 3.85-9.2 8.2-9.2 8.2z" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
-                          </svg>
+                        {matched ? (
+                          <Link to={`/offer/${matched.slug}`} className="home-btn home-btn--primary home-btn--sm">
+                            Подробнее
+                          </Link>
+                        ) : (
+                          <a href={item.link} target="_blank" rel="noopener noreferrer" className="home-btn home-btn--primary home-btn--sm">
+                            Подробнее
+                          </a>
+                        )}
+                        <button
+                          type="button"
+                          className={`home-fav${fav ? ' is-active' : ''}`}
+                          aria-label={fav ? 'Убрать из избранного' : 'В избранное'}
+                          aria-pressed={fav}
+                          onClick={() => toggleFavorite(favId)}
+                        >
+                          <HeartIcon filled={fav} size={18} />
                         </button>
                       </div>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -298,9 +321,18 @@ const Home = () => {
                   <div><span>Срок</span><strong>{item.term}</strong></div>
                   <div><span>Ежемесячный платёж</span><strong>{item.payment}</strong></div>
                 </div>
-                <a href={item.link} target="_blank" rel="noopener noreferrer" className="home-btn home-btn--primary home-btn--block">
-                  Подробнее
-                </a>
+                {(() => {
+                  const matched = getOfferByLink(item.link);
+                  return matched ? (
+                    <Link to={`/offer/${matched.slug}`} className="home-btn home-btn--primary home-btn--block">
+                      Подробнее
+                    </Link>
+                  ) : (
+                    <a href={item.link} target="_blank" rel="noopener noreferrer" className="home-btn home-btn--primary home-btn--block">
+                      Подробнее
+                    </a>
+                  );
+                })()}
               </article>
             ))}
           </div>
@@ -315,8 +347,8 @@ const Home = () => {
         <div className="container">
           <div className="home-block__head">
             <h2 className="home-block__title">Учитесь и принимайте финансовые решения</h2>
-            <Link to="/Education" className="home-block__more">
-              Все статьи
+            <Link to="/news" className="home-block__more">
+              Все новости
               <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
                 <path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
@@ -328,10 +360,10 @@ const Home = () => {
                 <img src={articleCredits} alt="" />
               </div>
               <div className="home-post__body">
-                <span className="home-post__tag">Кредиты</span>
-                <h3>Как снизить ставку по кредиту: рабочие способы</h3>
+                <span className="home-post__tag">Рынок</span>
+                <h3>Банки обновили условия по кредитам: что важно знать в августе</h3>
                 <div className="home-post__meta">
-                  <Link to="/loans">
+                  <Link to="/news/usloviya-kreditov-avgust-2026">
                     Читать
                     <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
                       <path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -346,9 +378,9 @@ const Home = () => {
               </div>
               <div className="home-post__body">
                 <span className="home-post__tag">Карты</span>
-                <h3>Кэшбэк: как получать максимум выгоды каждый день</h3>
+                <h3>Новые категории кэшбэка: какие карты выгоднее в повседневных тратах</h3>
                 <div className="home-post__meta">
-                  <Link to="/cards">
+                  <Link to="/news/keshbek-karty-novye-kategorii">
                     Читать
                     <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
                       <path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -363,9 +395,9 @@ const Home = () => {
               </div>
               <div className="home-post__body">
                 <span className="home-post__tag">Безопасность</span>
-                <h3>Финансовая безопасность: простые правила защиты</h3>
+                <h3>Мошенники усиливают схемы: простые правила защиты счетов летом</h3>
                 <div className="home-post__meta">
-                  <Link to="/Education">
+                  <Link to="/news/bezopasnost-platezhey-leto-2026">
                     Читать
                     <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
                       <path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -396,7 +428,7 @@ const Home = () => {
                 Перед оформлением продукта уточняйте актуальные условия на сайте банка.
               </p>
             </div>
-            <Link to="/loans" className="home-btn home-btn--ghost">Подробнее</Link>
+            <Link to="/faq" className="home-btn home-btn--ghost">Подробнее</Link>
           </div>
         </div>
       </section>

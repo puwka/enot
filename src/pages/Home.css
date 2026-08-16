@@ -177,19 +177,26 @@
   padding-left: 265px;
 }
 
-.home-hero__mascot {
+.home-hero__mascot-wrap {
   position: absolute;
   left: -72px;
   top: 50%;
   z-index: 1;
   width: 340px;
   margin: 0;
-  object-fit: contain;
-  object-position: center center;
   transform: translateY(-48%);
-  filter: drop-shadow(0 18px 32px rgba(11, 23, 57, 0.12));
   pointer-events: none;
   user-select: none;
+}
+
+.home-hero__mascot {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0;
+  object-fit: contain;
+  object-position: center center;
+  filter: drop-shadow(0 18px 32px rgba(11, 23, 57, 0.12));
 }
 
 .home-hero__calc {
@@ -637,7 +644,7 @@
     padding-left: 200px;
   }
 
-  .home-hero__mascot {
+  .home-hero__mascot-wrap {
     left: -40px;
     width: 300px;
   }
@@ -663,7 +670,7 @@
     max-width: 520px;
   }
 
-  .home-hero__mascot {
+  .home-hero__mascot-wrap {
     width: 260px;
     left: -24px;
   }
@@ -700,7 +707,7 @@
     padding-left: 140px;
   }
 
-  .home-hero__mascot {
+  .home-hero__mascot-wrap {
     width: 240px;
     left: -12px;
   }
@@ -766,15 +773,19 @@
     gap: 8px;
   }
 
-  .home-hero__mascot {
+  .home-hero__mascot-wrap {
     position: relative;
     left: auto;
     top: auto;
-    width: min(220px, 58vw);
+    width: min(200px, 52vw);
     transform: none;
     order: 1;
-    margin-bottom: -28px;
+    margin-bottom: -20px;
     z-index: 1;
+  }
+
+  .home-hero__mascot {
+    border-radius: 24px;
   }
 
   .home-hero__calc {
@@ -916,9 +927,9 @@
     font-size: 26px;
   }
 
-  .home-hero__mascot {
-    width: min(180px, 64vw);
-    margin-bottom: -20px;
+  .home-hero__mascot-wrap {
+    width: min(168px, 56vw);
+    margin-bottom: -16px;
   }
 
   .home-btn {
@@ -974,8 +985,9 @@
   transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
 }
 
-.home-fav:hover {
-  transform: scale(1.08);
+.home-fav.is-active {
+  border-color: #12b5a2;
+  background: #e9f9f6;
   color: #12b5a2;
 }
 

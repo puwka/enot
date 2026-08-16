@@ -1,6 +1,9 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import logoImage from '../images/logo.png';
+import { useFavorites } from '../hooks/useFavorites';
+import { useAuth } from '../context/AuthContext';
+import HeartIcon from '../components/HeartIcon';
 import './Header.css';
 
 const NAV_ITEMS = [
@@ -8,7 +11,8 @@ const NAV_ITEMS = [
   { to: '/cards', label: 'Дебетовые карты' },
   { to: '/auto-loans', label: 'Кредитные карты' },
   { to: '/Education', label: 'Статьи' },
-  { to: '/collateral-loans', label: 'Справочник' },
+  { to: '/news', label: 'Новости' },
+  { to: '/guide', label: 'Справочник' },
 ];
 
 const SEARCH_INDEX = [
@@ -51,21 +55,91 @@ const SEARCH_INDEX = [
     to: '/Education',
     title: 'Статьи',
     description: 'Финансовые советы и обучающие материалы',
-    keywords: ['статьи', 'статья', 'обучение', 'советы', 'безопасность', 'ставка'],
+    keywords: ['статьи', 'статья', 'обучение', 'советы', 'безопасность', 'ставка', 'кэшбэк', 'кешбэк'],
     group: 'Информация',
   },
   {
-    to: '/collateral-loans',
-    title: 'Справочник',
-    description: 'Справочная информация по продуктам',
-    keywords: ['справочник', 'информация', 'условия'],
+    to: '/news',
+    title: 'Новости',
+    description: 'Актуальные материалы о кредитах и картах',
+    keywords: ['новости', 'новость', 'рынок', 'обновления'],
     group: 'Информация',
+  },
+  {
+    to: '/news/usloviya-kreditov-avgust-2026',
+    title: 'Условия по кредитам в августе',
+    description: 'Что изменили банки и как сравнить предложения',
+    keywords: ['август', 'ставки', 'кредиты', 'новости'],
+    group: 'Новости',
+  },
+  {
+    to: '/article/kak-snizit-stavku-po-kreditu',
+    title: 'Как снизить ставку по кредиту',
+    description: 'Рабочие способы получить более выгодные условия',
+    keywords: ['ставка', 'снизить', 'кредит', 'рефинансирование'],
+    group: 'Статьи',
+  },
+  {
+    to: '/article/keshbek-kak-poluchat-maksimum',
+    title: 'Кэшбэк: как получать максимум',
+    description: 'Как выбрать карту под повседневные траты',
+    keywords: ['кэшбэк', 'кешбэк', 'карта', 'выгода'],
+    group: 'Статьи',
+  },
+  {
+    to: '/article/finansovaya-bezopasnost',
+    title: 'Финансовая безопасность',
+    description: 'Простые правила защиты счетов и карт',
+    keywords: ['безопасность', 'мошенники', 'защита'],
+    group: 'Статьи',
+  },
+  {
+    to: '/guide',
+    title: 'Справочник',
+    description: 'Навигация по разделам и базовые термины',
+    keywords: ['справочник', 'информация', 'условия', 'термины'],
+    group: 'Информация',
+  },
+  {
+    to: '/faq',
+    title: 'Вопросы и ответы',
+    description: 'Как работает сервис и оформление заявок',
+    keywords: ['faq', 'вопросы', 'ответы', 'помощь'],
+    group: 'Информация',
+  },
+  {
+    to: '/favorites',
+    title: 'Избранное',
+    description: 'Сохранённые предложения',
+    keywords: ['избранное', 'сохранить', 'сердечко'],
+    group: 'Информация',
+  },
+  {
+    to: '/account',
+    title: 'Личный кабинет',
+    description: 'Бонусы, история и настройки профиля',
+    keywords: ['кабинет', 'аккаунт', 'профиль', 'бонусы', 'вход'],
+    group: 'Аккаунт',
+  },
+  {
+    to: '/login',
+    title: 'Вход',
+    description: 'Авторизация в личный кабинет',
+    keywords: ['вход', 'логин', 'авторизация'],
+    group: 'Аккаунт',
+  },
+  {
+    to: '/register',
+    title: 'Регистрация',
+    description: 'Создать аккаунт ЕнотМани',
+    keywords: ['регистрация', 'аккаунт', 'создать'],
+    group: 'Аккаунт',
   },
   {
     to: '/Job',
     title: 'Вакансии',
-    description: 'Актуальные вакансии партнёров',
-    keywords: ['вакансии', 'работа', 'карьера', 'вопросы'],
+    description: 'Актуальные вакансии компаний',
+    keywords: ['вакансии', 'работа', 'карьера'],
     group: 'Информация',
   },
 ];
@@ -103,6 +177,8 @@ const Navbar = () => {
   const searchInputRef = useRef(null);
   const searchPanelRef = useRef(null);
   const searchId = useId();
+  const { count: favoritesCount } = useFavorites();
+  const { isAuthenticated, user, logout } = useAuth();
 
   const results = useMemo(() => {
     const query = searchQuery.trim();
@@ -142,18 +218,22 @@ const Navbar = () => {
   }, [isMenuOpen, isSearchOpen]);
 
   useEffect(() => {
-    if (!isSearchOpen) return undefined;
+    if (!isMenuOpen && !isSearchOpen) return undefined;
 
     const onKeyDown = (event) => {
       if (event.key === 'Escape') {
-        setIsSearchOpen(false);
-        setSearchQuery('');
+        if (isSearchOpen) {
+          setIsSearchOpen(false);
+          setSearchQuery('');
+        } else {
+          setIsMenuOpen(false);
+        }
       }
     };
 
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [isSearchOpen]);
+  }, [isMenuOpen, isSearchOpen]);
 
   const closeMenu = () => setIsMenuOpen(false);
 
@@ -196,7 +276,7 @@ const Navbar = () => {
   };
 
   return (
-    <header className="site-header">
+    <header className={`site-header${isMenuOpen ? ' is-menu-open' : ''}`}>
       <div className="site-header__bar">
         <div className="site-header__inner container">
           <Link to="/" className="site-header__brand" onClick={closeMenu}>
@@ -222,20 +302,43 @@ const Navbar = () => {
             <button
               type="button"
               className="site-header__action"
-              aria-label="Избранное"
+              aria-label={`Избранное${favoritesCount ? `, ${favoritesCount}` : ''}`}
               title="Избранное"
+              onClick={() => navigate('/favorites')}
             >
-              <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-                <path
-                  d="M12 20.5s-7.2-4.35-9.2-8.2C1.4 9.5 2.5 6.5 5.4 5.6c1.8-.55 3.7.15 4.8 1.55 1.1-1.4 3-2.1 4.8-1.55 2.9.9 4 3.9 2.6 6.7-2 3.85-9.2 8.2-9.2 8.2z"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              <HeartIcon filled={Boolean(favoritesCount)} size={20} />
               <span className="site-header__action-label">Избранное</span>
+              {favoritesCount > 0 ? (
+                <span className="site-header__badge">{favoritesCount}</span>
+              ) : null}
             </button>
+
+            {isAuthenticated ? (
+              <button
+                type="button"
+                className="site-header__action site-header__action--account"
+                title="Личный кабинет"
+                onClick={() => navigate('/account')}
+              >
+                <span className="site-header__account-avatar" aria-hidden="true">
+                  {user?.avatar ? (
+                    <img src={user.avatar} alt="" />
+                  ) : (
+                    (user?.name || 'Е').trim().charAt(0).toUpperCase()
+                  )}
+                </span>
+                <span className="site-header__action-label">Кабинет</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="site-header__action site-header__action--account"
+                title="Войти"
+                onClick={() => navigate('/login')}
+              >
+                <span className="site-header__action-label">Войти</span>
+              </button>
+            )}
 
             <button
               type="button"
@@ -356,6 +459,21 @@ const Navbar = () => {
       <div className={`site-header__drawer${isMenuOpen ? ' is-open' : ''}`} aria-hidden={!isMenuOpen}>
         <div className="site-header__drawer-backdrop" onClick={closeMenu} />
         <div className="site-header__drawer-panel" role="dialog" aria-modal="true" aria-label="Мобильное меню">
+          <div className="site-header__drawer-top">
+            <Link to="/" className="site-header__drawer-brand" onClick={closeMenu}>
+              <img src={logoImage} alt="" className="site-header__logo" />
+              <span>ЕнотМани</span>
+            </Link>
+            <button
+              type="button"
+              className="site-header__drawer-close"
+              aria-label="Закрыть меню"
+              onClick={closeMenu}
+            >
+              <span aria-hidden="true" />
+              <span aria-hidden="true" />
+            </button>
+          </div>
           <button type="button" className="site-header__drawer-search" onClick={openSearch}>
             <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
               <circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" strokeWidth="1.8" />
@@ -382,17 +500,47 @@ const Navbar = () => {
             <NavLink to="/Job" className="site-header__drawer-link" onClick={closeMenu}>
               Вакансии
             </NavLink>
+            <NavLink to="/faq" className="site-header__drawer-link" onClick={closeMenu}>
+              Вопросы и ответы
+            </NavLink>
+            {isAuthenticated ? (
+              <>
+                <NavLink to="/account" className="site-header__drawer-link" onClick={closeMenu}>
+                  Личный кабинет
+                </NavLink>
+                <button
+                  type="button"
+                  className="site-header__drawer-fav"
+                  onClick={() => {
+                    closeMenu();
+                    logout();
+                    navigate('/login');
+                  }}
+                >
+                  Выйти
+                </button>
+              </>
+            ) : (
+              <>
+                <NavLink to="/login" className="site-header__drawer-link" onClick={closeMenu}>
+                  Войти
+                </NavLink>
+                <NavLink to="/register" className="site-header__drawer-link" onClick={closeMenu}>
+                  Регистрация
+                </NavLink>
+              </>
+            )}
           </nav>
-          <button type="button" className="site-header__drawer-fav" aria-label="Избранное">
-            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-              <path
-                d="M12 20.5s-7.2-4.35-9.2-8.2C1.4 9.5 2.5 6.5 5.4 5.6c1.8-.55 3.7.15 4.8 1.55 1.1-1.4 3-2.1 4.8-1.55 2.9.9 4 3.9 2.6 6.7-2 3.85-9.2 8.2-9.2 8.2z"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinejoin="round"
-              />
-            </svg>
+          <button
+            type="button"
+            className="site-header__drawer-fav"
+            aria-label="Избранное"
+            onClick={() => {
+              closeMenu();
+              navigate('/favorites');
+            }}
+          >
+            <HeartIcon size={18} />
             Избранное
           </button>
         </div>

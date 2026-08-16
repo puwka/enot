@@ -3,7 +3,6 @@ import logoImage from '../images/logo.png';
 import vkIcon from '../images/vkontakte.png';
 import tgIcon from '../images/telega.png';
 import maxIcon from '../images/max.png';
-import PrivacyPolicyModal from './PrivacyPolicyModal';
 import './Footer.css';
 
 const PRODUCT_LINKS = [
@@ -14,8 +13,9 @@ const PRODUCT_LINKS = [
 
 const INFO_LINKS = [
   { to: '/Education', label: 'Статьи' },
-  { to: '/collateral-loans', label: 'Справочник' },
-  { to: '/Job', label: 'Вопросы и ответы' },
+  { to: '/news', label: 'Новости' },
+  { to: '/guide', label: 'Справочник' },
+  { to: '/faq', label: 'Вопросы и ответы' },
 ];
 
 const SOCIAL_LINKS = [
@@ -73,32 +73,15 @@ const FooterBar = () => {
             ))}
           </ul>
         </div>
-
-        <div className="site-footer__col">
-          <h3 className="site-footer__title">О сервисе</h3>
-          <ul className="site-footer__list">
-            <li>
-              <Link to="/">О проекте</Link>
-            </li>
-            <li>
-              <a href="https://t.me/enot_mani" target="_blank" rel="noopener noreferrer">
-                Контакты
-              </a>
-            </li>
-            <li className="site-footer__modal-item">
-              <PrivacyPolicyModal triggerLabel="Правовая информация" />
-            </li>
-          </ul>
-        </div>
       </div>
 
       <div className="site-footer__bottom">
         <div className="site-footer__bottom-inner container">
           <div className="site-footer__meta">
-            <p className="site-footer__copy">© ЕнотМани 2024</p>
+            <p className="site-footer__copy">© ЕнотМани 2026</p>
             <div className="site-footer__meta-links">
-              <span>Пользовательское соглашение</span>
-              <PrivacyPolicyModal triggerLabel="Политика конфиденциальности" />
+              <Link to="/terms">Пользовательское соглашение</Link>
+              <Link to="/privacy">Политика конфиденциальности</Link>
             </div>
           </div>
         </div>
