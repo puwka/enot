@@ -37,19 +37,22 @@ const AccountSettings = () => {
     reader.readAsDataURL(file);
   };
 
-  const save = (event) => {
+  const save = async (event) => {
     event.preventDefault();
     setError('');
-    saveProfile({
-      name,
-      phone,
-      avatar,
-      notifications: { email: emailNotify, pushes: pushNotify },
-    });
-    if (name && phone) {
-      claimBonus(BONUS_CONFIG.actions.completeProfile);
+    try {
+      await saveProfile({
+        name,
+        phone,
+        notifications: { email: emailNotify, pushes: pushNotify },
+      });
+      if (name && phone) {
+        await claimBonus(BONUS_CONFIG.actions.completeProfile);
+      }
+      setMessage('Профиль сохранён.');
+    } catch {
+      setError('Не удалось сохранить профиль.');
     }
-    setMessage('Профиль сохранён.');
   };
 
   const onPassword = async (event) => {
@@ -66,18 +69,22 @@ const AccountSettings = () => {
     }
   };
 
-  const onLogout = () => {
+  const onLogout = async () => {
     const ok = window.confirm('Выйти из аккаунта?');
     if (!ok) return;
-    logout();
+    await logout();
     navigate('/login');
   };
 
-  const onDelete = () => {
+  const onDelete = async () => {
     const ok = window.confirm('Удалить аккаунт безвозвратно?');
     if (!ok) return;
-    removeAccount();
-    navigate('/register');
+    try {
+      await removeAccount();
+      navigate('/register');
+    } catch {
+      setError('Не удалось удалить аккаунт.');
+    }
   };
 
   return (

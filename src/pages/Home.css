@@ -262,6 +262,16 @@
   gap: 16px;
 }
 
+.home-cats .home-cat {
+  opacity: 0;
+  transform: translateY(22px);
+}
+
+.home-block.home-reveal.is-visible .home-cats .home-cat {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .home-cat {
   display: flex;
   align-items: center;
@@ -274,9 +284,11 @@
   text-decoration: none;
   color: #0b1739;
   transition:
+    opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
     border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    transform 0.2s ease;
+    box-shadow 0.2s ease;
+  transition-delay: var(--reveal-delay, 0ms);
 }
 
 .home-cat:hover {
@@ -1050,6 +1062,12 @@
   }
 
   .home-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .home-cats .home-cat {
     opacity: 1;
     transform: none;
     transition: none;

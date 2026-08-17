@@ -14,7 +14,10 @@ export const PRODUCT_CATEGORIES = [
 ];
 
 export const INFO_CATEGORIES = [
-  { to: '/Education', label: 'Статьи и курсы' },
+  { to: '/Education', label: 'Статьи' },
+  { to: '/obuchenie', label: 'Обучение' },
+  { to: '/services', label: 'Сервисы' },
+  { to: '/shops', label: 'Магазины' },
   { to: '/Job', label: 'Вакансии' },
   { to: '/guide', label: 'Справочник' },
 ];
@@ -41,6 +44,16 @@ const SORT_OPTIONS = {
     { value: 'name-asc', label: 'По направлению А–Я' },
     { value: 'name-desc', label: 'По направлению Я–А' },
   ],
+  service: [
+    { value: 'default', label: 'По умолчанию' },
+    { value: 'name-asc', label: 'По названию А–Я' },
+    { value: 'spec-asc', label: 'По направлению' },
+  ],
+  shop: [
+    { value: 'default', label: 'По умолчанию' },
+    { value: 'name-asc', label: 'По названию А–Я' },
+    { value: 'name-desc', label: 'По названию Я–А' },
+  ],
 };
 
 const COLUMNS = {
@@ -62,6 +75,16 @@ const COLUMNS = {
   ],
   education: [
     { key: 'title', label: 'Направление' },
+  ],
+  service: [
+    { key: 'title', label: 'Сервис' },
+    { key: 'spec', label: 'Категория' },
+  ],
+  shop: [
+    { key: 'title', label: 'Предложение' },
+    { key: 'benefit1', label: 'Выгода' },
+    { key: 'benefit2', label: 'Условие' },
+    { key: 'benefit3', label: 'Сервис' },
   ],
 };
 
@@ -171,9 +194,18 @@ const CatalogPage = ({
         </>
       );
     }
-    if (variant === 'job') {
+    if (variant === 'job' || variant === 'service') {
       return (
         <div><span>Направление</span><strong>{item.spec}</strong></div>
+      );
+    }
+    if (variant === 'shop') {
+      return (
+        <>
+          <div><span>Выгода</span><strong>{item.benefit1}</strong></div>
+          <div><span>Условие</span><strong>{item.benefit2}</strong></div>
+          <div><span>Сервис</span><strong>{item.benefit3}</strong></div>
+        </>
       );
     }
     return null;

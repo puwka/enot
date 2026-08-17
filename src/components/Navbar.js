@@ -6,14 +6,22 @@ import { useAuth } from '../context/AuthContext';
 import HeartIcon from '../components/HeartIcon';
 import './Header.css';
 
-const NAV_ITEMS = [
+const NAV_PRIMARY = [
   { to: '/loans', label: 'Кредиты' },
-  { to: '/cards', label: 'Дебетовые карты' },
-  { to: '/auto-loans', label: 'Кредитные карты' },
+  { to: '/cards', label: 'Дебетовые карты', shortLabel: 'Дебетовые' },
+  { to: '/auto-loans', label: 'Кредитные карты', shortLabel: 'Кредитные' },
+  { to: '/obuchenie', label: 'Обучение' },
+  { to: '/services', label: 'Сервисы' },
+  { to: '/shops', label: 'Магазины' },
+];
+
+const NAV_MORE = [
   { to: '/Education', label: 'Статьи' },
   { to: '/news', label: 'Новости' },
   { to: '/guide', label: 'Справочник' },
 ];
+
+const NAV_ITEMS = [...NAV_PRIMARY, ...NAV_MORE];
 
 const SEARCH_INDEX = [
   {
@@ -55,8 +63,29 @@ const SEARCH_INDEX = [
     to: '/Education',
     title: 'Статьи',
     description: 'Финансовые советы и обучающие материалы',
-    keywords: ['статьи', 'статья', 'обучение', 'советы', 'безопасность', 'ставка', 'кэшбэк', 'кешбэк'],
+    keywords: ['статьи', 'статья', 'советы', 'безопасность', 'ставка', 'кэшбэк', 'кешбэк'],
     group: 'Информация',
+  },
+  {
+    to: '/obuchenie',
+    title: 'Обучение',
+    description: 'Курсы, переподготовка и онлайн-школы',
+    keywords: ['обучение', 'курсы', 'школа', 'переподготовка', 'it', 'психология'],
+    group: 'Информация',
+  },
+  {
+    to: '/services',
+    title: 'Сервисы',
+    description: 'Подработка, доставка и бытовые услуги',
+    keywords: ['сервисы', 'сервис', 'доставка', 'курьер', 'клининг', 'подработка'],
+    group: 'Информация',
+  },
+  {
+    to: '/shops',
+    title: 'Магазины',
+    description: 'Кешбэк и выгода при покупках',
+    keywords: ['магазины', 'магазин', 'кешбэк', 'кэшбэк', 'покупки', 'супермаркет'],
+    group: 'Продукты',
   },
   {
     to: '/news',
@@ -171,11 +200,13 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
   const searchInputRef = useRef(null);
   const searchPanelRef = useRef(null);
+  const moreMenuRef = useRef(null);
   const searchId = useId();
   const { count: favoritesCount } = useFavorites();
   const { isAuthenticated, user, logout } = useAuth();
@@ -195,6 +226,7 @@ const Navbar = () => {
 
   useEffect(() => {
     setIsMenuOpen(false);
+    setIsMoreOpen(false);
     setIsSearchOpen(false);
     setSearchQuery('');
     setActiveIndex(0);
@@ -218,6 +250,19 @@ const Navbar = () => {
   }, [isMenuOpen, isSearchOpen]);
 
   useEffect(() => {
+    if (!isMoreOpen) return undefined;
+
+    const onPointerDown = (event) => {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(event.target)) {
+        setIsMoreOpen(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [isMoreOpen]);
+
+  useEffect(() => {
     if (!isMenuOpen && !isSearchOpen) return undefined;
 
     const onKeyDown = (event) => {
@@ -225,6 +270,8 @@ const Navbar = () => {
         if (isSearchOpen) {
           setIsSearchOpen(false);
           setSearchQuery('');
+        } else if (isMoreOpen) {
+          setIsMoreOpen(false);
         } else {
           setIsMenuOpen(false);
         }
@@ -233,9 +280,11 @@ const Navbar = () => {
 
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [isMenuOpen, isSearchOpen]);
+  }, [isMenuOpen, isSearchOpen, isMoreOpen]);
 
   const closeMenu = () => setIsMenuOpen(false);
+
+  const isMoreActive = NAV_MORE.some((item) => location.pathname.startsWith(item.to));
 
   const closeSearch = () => {
     setIsSearchOpen(false);
@@ -285,7 +334,7 @@ const Navbar = () => {
           </Link>
 
           <nav className="site-header__nav" aria-label="Основная навигация">
-            {NAV_ITEMS.map((item) => (
+            {NAV_PRIMARY.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
@@ -293,9 +342,49 @@ const Navbar = () => {
                   `site-header__link${isActive ? ' is-active' : ''}`
                 }
               >
-                {item.label}
+                {item.shortLabel ? (
+                  <>
+                    <span className="site-header__link-text site-header__link-text--full">{item.label}</span>
+                    <span className="site-header__link-text site-header__link-text--short">{item.shortLabel}</span>
+                  </>
+                ) : (
+                  item.label
+                )}
               </NavLink>
             ))}
+
+            <div
+              className="site-header__more"
+              ref={moreMenuRef}
+              onMouseLeave={() => setIsMoreOpen(false)}
+            >
+              <button
+                type="button"
+                className={`site-header__link site-header__more-toggle${isMoreOpen ? ' is-open' : ''}${isMoreActive ? ' is-active' : ''}`}
+                aria-expanded={isMoreOpen}
+                aria-haspopup="true"
+                onClick={() => setIsMoreOpen((open) => !open)}
+              >
+                Ещё
+                <svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true">
+                  <path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+              <div className={`site-header__more-menu${isMoreOpen ? ' is-open' : ''}`}>
+                {NAV_MORE.map((item) => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    className={({ isActive }) =>
+                      `site-header__more-link${isActive ? ' is-active' : ''}`
+                    }
+                    onClick={() => setIsMoreOpen(false)}
+                  >
+                    {item.label}
+                  </NavLink>
+                ))}
+              </div>
+            </div>
           </nav>
 
           <div className="site-header__actions">
@@ -497,8 +586,8 @@ const Navbar = () => {
             <NavLink to="/consumer-loans" className="site-header__drawer-link" onClick={closeMenu}>
               Потребительские кредиты
             </NavLink>
-            <NavLink to="/Job" className="site-header__drawer-link" onClick={closeMenu}>
-              Вакансии
+            <NavLink to="/shops" className="site-header__drawer-link" onClick={closeMenu}>
+              Магазины
             </NavLink>
             <NavLink to="/faq" className="site-header__drawer-link" onClick={closeMenu}>
               Вопросы и ответы

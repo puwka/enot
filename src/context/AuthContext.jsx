@@ -1,20 +1,17 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { BONUS_CONFIG } from '../config/bonuses';
+import { isSupabaseConfigured } from '../lib/supabaseClient';
 import {
-  addBonusTransaction,
-  authenticateUser,
-  claimActionBonus,
-  changePassword,
-  createUserRecord,
-  deleteAccount,
-  getSessionUserId,
-  getUserById,
-  resetPasswordByEmail,
-  seedDemoCabinetData,
-  setSessionUserId,
-  subscribeAuth,
-  updateProfile,
-} from '../services/authStorage';
+  claimSupabaseBonus,
+  getCurrentSessionUser,
+  loginWithSupabase,
+  logoutFromSupabase,
+  recoverSupabasePassword,
+  registerWithSupabase,
+  removeSupabaseAccount,
+  subscribeAuthSession,
+  updateSupabasePassword,
+  updateSupabaseProfile,
+} from '../services/userAuth';
 
 const AuthContext = createContext(null);
 
@@ -22,83 +19,73 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const refresh = useCallback(() => {
-    const id = getSessionUserId();
-    setUser(id ? getUserById(id) : null);
-    setLoading(false);
+  const refresh = useCallback(async () => {
+    if (!isSupabaseConfigured) {
+      setUser(null);
+      setLoading(false);
+      return null;
+    }
+    try {
+      const next = await getCurrentSessionUser();
+      setUser(next);
+      setLoading(false);
+      return next;
+    } catch {
+      setUser(null);
+      setLoading(false);
+      return null;
+    }
   }, []);
 
   useEffect(() => {
     refresh();
-    return subscribeAuth(refresh);
+    return subscribeAuthSession((next) => {
+      setUser(next);
+      setLoading(false);
+    });
   }, [refresh]);
 
   const login = useCallback(async (loginValue, password) => {
-    const next = await authenticateUser(loginValue, password);
-    setSessionUserId(next.id);
-    claimActionBonus(next.id, BONUS_CONFIG.actions.dailyLogin);
-    seedDemoCabinetData(next.id);
-    refresh();
-    return getUserById(next.id);
-  }, [refresh]);
-
-  const register = useCallback(async (payload) => {
-    const created = await createUserRecord(payload);
-    setSessionUserId(created.id);
-    addBonusTransaction(created.id, {
-      title: 'Добро пожаловать',
-      points: 50,
-      actionId: 'welcome',
-    });
-    claimActionBonus(created.id, BONUS_CONFIG.actions.dailyLogin);
-    seedDemoCabinetData(created.id);
-    refresh();
-    return getUserById(created.id);
-  }, [refresh]);
-
-  const logout = useCallback(() => {
-    setSessionUserId(null);
-    refresh();
-  }, [refresh]);
-
-  const saveProfile = useCallback(
-    (patch) => {
-      if (!user) return null;
-      const next = updateProfile(user.id, patch);
-      refresh();
-      return next;
-    },
-    [user, refresh]
-  );
-
-  const updatePassword = useCallback(
-    async (currentPassword, nextPassword) => {
-      if (!user) throw new Error('NOT_FOUND');
-      await changePassword(user.id, currentPassword, nextPassword);
-      refresh();
-    },
-    [user, refresh]
-  );
-
-  const recoverPassword = useCallback(async (email, nextPassword) => {
-    await resetPasswordByEmail(email, nextPassword);
+    const next = await loginWithSupabase(loginValue, password);
+    setUser(next);
+    return next;
   }, []);
 
-  const removeAccount = useCallback(() => {
-    if (!user) return;
-    deleteAccount(user.id);
-    refresh();
-  }, [user, refresh]);
+  const register = useCallback(async (payload) => {
+    const next = await registerWithSupabase(payload);
+    setUser(next);
+    return next;
+  }, []);
 
-  const claimBonus = useCallback(
-    (action) => {
-      if (!user) return null;
-      const result = claimActionBonus(user.id, action);
-      refresh();
-      return result;
-    },
-    [user, refresh]
-  );
+  const logout = useCallback(async () => {
+    await logoutFromSupabase();
+    setUser(null);
+  }, []);
+
+  const saveProfile = useCallback(async (patch) => {
+    const next = await updateSupabaseProfile(patch);
+    setUser(next);
+    return next;
+  }, []);
+
+  const updatePassword = useCallback(async (currentPassword, nextPassword) => {
+    await updateSupabasePassword(currentPassword, nextPassword);
+  }, []);
+
+  const recoverPassword = useCallback(async (email) => {
+    await recoverSupabasePassword(email);
+  }, []);
+
+  const removeAccount = useCallback(async () => {
+    await removeSupabaseAccount();
+    setUser(null);
+  }, []);
+
+  const claimBonus = useCallback(async (action) => {
+    const result = await claimSupabaseBonus(action);
+    if (result.user) setUser(result.user);
+    return result;
+  }, []);
 
   const value = useMemo(
     () => ({

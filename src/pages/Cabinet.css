@@ -55,6 +55,54 @@
   font-size: 14px;
 }
 
+.auth-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.auth-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  border: none;
+  background: rgba(11, 23, 57, 0.45);
+  cursor: pointer;
+}
+
+.auth-modal__dialog {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 420px);
+  padding: 28px 24px;
+  border-radius: 18px;
+  background: #fff;
+  border: 1px solid #e4e9f0;
+  box-shadow: 0 16px 40px rgba(11, 23, 57, 0.18);
+}
+
+.auth-modal__dialog h2 {
+  margin: 0;
+  font-size: 24px;
+  letter-spacing: -0.03em;
+  color: #0b1739;
+}
+
+.auth-modal__dialog p {
+  margin: 12px 0 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: #5b677a;
+}
+
+.auth-modal__actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 22px;
+}
+
 .auth-form__hint {
   margin: 0;
   font-size: 13px;

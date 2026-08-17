@@ -6,6 +6,9 @@ import { COLLATERAL_LOANS_CATALOG } from '../pages/CollateralLoans';
 import { CARDS_CATALOG } from '../pages/Cards';
 import { JOB_CATALOG } from '../pages/Job';
 import { EDUCATION_CATALOG } from '../pages/EducationData';
+import { OBUCHENIE_CATALOG } from '../pages/Obuchenie';
+import { SERVICES_CATALOG } from '../pages/Services';
+import { SHOPS_CATALOG } from '../pages/Shops';
 
 const CATALOGS = [
   LOANS_CATALOG,
@@ -15,6 +18,9 @@ const CATALOGS = [
   CARDS_CATALOG,
   JOB_CATALOG,
   EDUCATION_CATALOG,
+  OBUCHENIE_CATALOG,
+  SERVICES_CATALOG,
+  SHOPS_CATALOG,
 ];
 
 export const ALL_OFFERS = CATALOGS.flatMap((catalog) =>

@@ -13,6 +13,9 @@ const PRODUCT_LINKS = [
 
 const INFO_LINKS = [
   { to: '/Education', label: 'Статьи' },
+  { to: '/obuchenie', label: 'Обучение' },
+  { to: '/services', label: 'Сервисы' },
+  { to: '/shops', label: 'Магазины' },
   { to: '/news', label: 'Новости' },
   { to: '/guide', label: 'Справочник' },
   { to: '/faq', label: 'Вопросы и ответы' },

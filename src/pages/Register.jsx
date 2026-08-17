@@ -14,12 +14,20 @@ const Register = () => {
   const [confirm, setConfirm] = useState('');
   const [agree, setAgree] = useState(false);
   const [error, setError] = useState('');
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const referralCode = useMemo(() => params.get('ref') || '', [params]);
 
   if (!loading && isAuthenticated) {
     return <Navigate to="/account" replace />;
   }
+
+  const closeConfirmModal = () => setConfirmModalOpen(false);
+
+  const goToLogin = () => {
+    setConfirmModalOpen(false);
+    navigate('/login', { replace: true });
+  };
 
   const onSubmit = async (event) => {
     event.preventDefault();
@@ -41,7 +49,15 @@ const Register = () => {
       await register({ name, email, phone, password, referralCode });
       navigate('/account', { replace: true });
     } catch (err) {
-      setError(err?.message === 'EMAIL_EXISTS' ? 'Этот email уже зарегистрирован.' : 'Не удалось создать аккаунт.');
+      if (err?.code === 'EMAIL_EXISTS' || err?.message === 'EMAIL_EXISTS') {
+        setError('Этот email уже зарегистрирован.');
+      } else if (err?.code === 'EMAIL_CONFIRM_REQUIRED') {
+        setConfirmModalOpen(true);
+      } else if (err?.code === 'SUPABASE_NOT_CONFIGURED') {
+        setError('Supabase не настроен. Проверьте .env.');
+      } else {
+        setError(err?.message || 'Не удалось создать аккаунт.');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -92,6 +108,31 @@ const Register = () => {
           </div>
         </div>
       </div>
+
+      {confirmModalOpen ? (
+        <div className="auth-modal" role="presentation">
+          <button type="button" className="auth-modal__backdrop" aria-label="Закрыть" onClick={closeConfirmModal} />
+          <div
+            className="auth-modal__dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="register-confirm-title"
+          >
+            <h2 id="register-confirm-title">Аккаунт создан</h2>
+            <p>
+              Подтвердите email по ссылке из письма, затем войдите в личный кабинет.
+            </p>
+            <div className="auth-modal__actions">
+              <button type="button" className="btn btn--primary btn--block" onClick={goToLogin}>
+                Перейти ко входу
+              </button>
+              <button type="button" className="btn btn--secondary btn--block" onClick={closeConfirmModal}>
+                Закрыть
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 };

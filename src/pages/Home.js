@@ -9,6 +9,12 @@ import heroMascotMobile from '../images/enot__png.png';
 import catLoansIcon from '../img_main/cat-loans.png';
 import catDebitIcon from '../img_main/cat-debit.png';
 import catCreditIcon from '../img_main/cat-credit.png';
+import catEducationIcon from '../img_main/cat-education.svg';
+import catServicesIcon from '../img_main/cat-services.svg';
+import catShopsIcon from '../img_main/cat-shops.svg';
+import { EDUCATION_ITEMS } from './EducationData';
+import { SERVICES_ITEMS } from './Services';
+import { SHOPS_ITEMS } from './Shops';
 import articleCredits from '../img_main/article-credits.png';
 import articleCards from '../img_main/article-cards.png';
 import articleSecurity from '../img_main/article-security.png';
@@ -59,6 +65,48 @@ const OFFER_TABS = {
       { bank: 'Халва', type: 'Рассрочка', image: halva, rate: 'До 15%', sum: '10 000 – 100 000 ₽', term: 'До 7 лет', payment: 'от 2 800 ₽', link: 'https://fin-lg.com/aff_c?aff_id=145356&offer_id=2413&p=10695&erid=LjN8KTAzF' },
       { bank: 'Т-Банк', type: 'Drive', image: tin, rate: 'До 62%', sum: '15 000 – 1 млн ₽', term: '5 лет', payment: 'от 4 900 ₽', link: 'https://my.saleads.pro/s/ounml?erid=2VtzqvRynmt' },
     ],
+  },
+  education: {
+    label: 'Обучение',
+    allTo: '/obuchenie',
+    items: EDUCATION_ITEMS.slice(0, 5).map((item) => ({
+      bank: item.naprav,
+      type: 'Курс',
+      image: item.image,
+      rate: 'Онлайн',
+      sum: 'Запись на сайте',
+      term: 'Гибкий график',
+      payment: '—',
+      link: item.link,
+    })),
+  },
+  services: {
+    label: 'Сервисы',
+    allTo: '/services',
+    items: SERVICES_ITEMS.slice(0, 5).map((item) => ({
+      bank: item.nameis,
+      type: item.spec,
+      image: item.image,
+      rate: 'Подработка',
+      sum: 'Гибкий график',
+      term: 'Онлайн-заявка',
+      payment: '—',
+      link: item.link,
+    })),
+  },
+  shops: {
+    label: 'Магазины',
+    allTo: '/shops',
+    items: SHOPS_ITEMS.slice(0, 5).map((item) => ({
+      bank: item.bank,
+      type: 'Кешбэк',
+      image: item.image,
+      rate: item.opis,
+      sum: item.opis1,
+      term: item.opis2,
+      payment: '—',
+      link: item.link,
+    })),
   },
 };
 
@@ -173,7 +221,7 @@ const Home = () => {
         <div className="container">
           <h2 className="home-block__title">Популярные категории</h2>
           <div className="home-cats">
-            <Link to="/consumer-loans" className="home-cat home-reveal" style={{ '--reveal-delay': '60ms' }}>
+            <Link to="/consumer-loans" className="home-cat" style={{ '--reveal-delay': '60ms' }}>
               <span className="home-cat__icon" aria-hidden="true">
                 <img src={catLoansIcon} alt="" />
               </span>
@@ -183,7 +231,7 @@ const Home = () => {
               </span>
               <span className="home-cat__chevron" aria-hidden="true">›</span>
             </Link>
-            <Link to="/cards" className="home-cat home-reveal" style={{ '--reveal-delay': '140ms' }}>
+            <Link to="/cards" className="home-cat" style={{ '--reveal-delay': '140ms' }}>
               <span className="home-cat__icon" aria-hidden="true">
                 <img src={catDebitIcon} alt="" />
               </span>
@@ -193,13 +241,43 @@ const Home = () => {
               </span>
               <span className="home-cat__chevron" aria-hidden="true">›</span>
             </Link>
-            <Link to="/auto-loans" className="home-cat home-reveal" style={{ '--reveal-delay': '220ms' }}>
+            <Link to="/auto-loans" className="home-cat" style={{ '--reveal-delay': '220ms' }}>
               <span className="home-cat__icon" aria-hidden="true">
                 <img src={catCreditIcon} alt="" />
               </span>
               <span className="home-cat__text">
                 <strong>Кредитные карты</strong>
                 <span>Льготный период и выгодные условия</span>
+              </span>
+              <span className="home-cat__chevron" aria-hidden="true">›</span>
+            </Link>
+            <Link to="/obuchenie" className="home-cat" style={{ '--reveal-delay': '300ms' }}>
+              <span className="home-cat__icon" aria-hidden="true">
+                <img src={catEducationIcon} alt="" />
+              </span>
+              <span className="home-cat__text">
+                <strong>Обучение</strong>
+                <span>Курсы, переподготовка и онлайн-школы</span>
+              </span>
+              <span className="home-cat__chevron" aria-hidden="true">›</span>
+            </Link>
+            <Link to="/services" className="home-cat" style={{ '--reveal-delay': '380ms' }}>
+              <span className="home-cat__icon" aria-hidden="true">
+                <img src={catServicesIcon} alt="" />
+              </span>
+              <span className="home-cat__text">
+                <strong>Сервисы</strong>
+                <span>Доставка, подработка и бытовые услуги</span>
+              </span>
+              <span className="home-cat__chevron" aria-hidden="true">›</span>
+            </Link>
+            <Link to="/shops" className="home-cat" style={{ '--reveal-delay': '460ms' }}>
+              <span className="home-cat__icon" aria-hidden="true">
+                <img src={catShopsIcon} alt="" />
+              </span>
+              <span className="home-cat__text">
+                <strong>Магазины</strong>
+                <span>Кешбэк и выгода при покупках у партнёров</span>
               </span>
               <span className="home-cat__chevron" aria-hidden="true">›</span>
             </Link>
@@ -220,7 +298,7 @@ const Home = () => {
           </div>
 
           <div className="home-tabs" role="tablist">
-            {['consumer', 'cards', 'credit'].map((key) => (
+            {['consumer', 'cards', 'credit', 'education', 'services', 'shops'].map((key) => (
               <button
                 key={key}
                 type="button"

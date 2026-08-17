@@ -17,9 +17,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
+  gap: 16px;
   width: 100%;
-  max-width: 1160px;
+  max-width: 1240px;
   margin-inline: auto;
   min-height: var(--header-h);
   padding-block: 0;
@@ -58,19 +58,88 @@
   align-items: center;
   justify-content: center;
   flex-wrap: nowrap;
-  gap: 4px;
+  gap: 2px;
   min-width: 0;
-  flex: 1;
+  flex: 1 1 auto;
+  margin-inline: 8px;
+}
+
+.site-header__link-text--short {
+  display: none;
+}
+
+.site-header__more {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.site-header__more-toggle {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  gap: 4px;
+}
+
+.site-header__more-toggle svg {
+  transition: transform var(--transition-fast);
+}
+
+.site-header__more-toggle.is-open svg {
+  transform: rotate(180deg);
+}
+
+.site-header__more-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  z-index: calc(var(--z-header) + 2);
+  display: none;
+  min-width: 168px;
+  padding: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  background: #0f1f49;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+  transform: translateX(-50%);
+}
+
+.site-header__more-menu.is-open {
+  display: block;
+}
+
+.site-header__more-link {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.site-header__more-link:hover {
+  color: var(--color-text-inverse);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.site-header__more-link.is-active {
+  color: var(--color-text-inverse);
+  background: rgba(255, 255, 255, 0.1);
+  font-weight: var(--fw-semibold);
 }
 
 .site-header__link {
   position: relative;
   display: inline-flex;
   align-items: center;
-  padding: 8px 10px;
+  flex-shrink: 0;
+  padding: 8px 9px;
   border-radius: 8px;
   color: rgba(255, 255, 255, 0.82);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
   transition: color var(--transition-fast), background-color var(--transition-fast);
@@ -108,6 +177,7 @@
   align-items: center;
   gap: var(--space-1);
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 .site-header__action {
@@ -597,6 +667,16 @@
     width: 40px;
     padding: 0;
     justify-content: center;
+  }
+}
+
+@media (max-width: 1280px) {
+  .site-header__link-text--full {
+    display: none;
+  }
+
+  .site-header__link-text--short {
+    display: inline;
   }
 }
 

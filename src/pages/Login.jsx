@@ -24,7 +24,7 @@ const Login = () => {
       await login(loginValue, password);
       navigate(location.state?.from || '/account', { replace: true });
     } catch {
-      setError('Неверный email, телефон или пароль.');
+      setError('Неверный email или пароль.');
     } finally {
       setSubmitting(false);
     }
@@ -39,10 +39,10 @@ const Login = () => {
           <form className="auth-form" onSubmit={onSubmit}>
             {error ? <div className="auth-form__error">{error}</div> : null}
             <label className="field">
-              <span className="field__label">Email или телефон</span>
+              <span className="field__label">Email</span>
               <input
                 className="input"
-                type="text"
+                type="email"
                 value={loginValue}
                 onChange={(event) => setLoginValue(event.target.value)}
                 required
