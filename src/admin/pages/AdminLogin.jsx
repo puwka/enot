@@ -37,8 +37,8 @@ const AdminLogin = () => {
   return (
     <div className="admin-auth">
       <form className="admin-auth__card" onSubmit={onSubmit}>
-        <h1>Вход в админ-панель</h1>
-        <p>Доступ только для сотрудников с ролью SUPERADMIN, ADMIN или EDITOR.</p>
+        <h1>Вход</h1>
+        <p>Административная панель ЕнотМани. Доступ только для сотрудников.</p>
         {error ? <div className="admin-auth__error">{error}</div> : null}
         <label className="admin-field">
           <span>Email</span>

@@ -10,6 +10,167 @@ const NOTIFICATIONS = [
   { id: 3, title: 'Система', text: 'Резервное копирование выполнено', time: 'вчера' },
 ];
 
+const Icon = ({ name }) => {
+  const common = {
+    viewBox: '0 0 16 16',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: '1.4',
+    strokeLinecap: 'round',
+    strokeLinejoin: 'round',
+    'aria-hidden': true,
+  };
+  if (name === 'home') {
+    return (
+      <svg {...common}>
+        <path d="M2.5 7.2 8 2.8l5.5 4.4V13a.8.8 0 0 1-.8.8H3.3A.8.8 0 0 1 2.5 13V7.2Z" />
+      </svg>
+    );
+  }
+  if (name === 'file') {
+    return (
+      <svg {...common}>
+        <path d="M4 2.5h5.2L12.5 6v7.5H4V2.5Z" />
+        <path d="M9.2 2.5V6H12.5" />
+      </svg>
+    );
+  }
+  if (name === 'news') {
+    return (
+      <svg {...common}>
+        <path d="M3 3.2h10v9.6H3z" />
+        <path d="M5.2 6.2h5.6M5.2 8.4h3.8" />
+      </svg>
+    );
+  }
+  if (name === 'article') {
+    return (
+      <svg {...common}>
+        <path d="M4 3h8v10H4z" />
+        <path d="M6 6h4M6 8.2h4M6 10.4h2.4" />
+      </svg>
+    );
+  }
+  if (name === 'tag') {
+    return (
+      <svg {...common}>
+        <path d="M2.8 8.2 8.1 2.9h5.1v5.1L8 13.2 2.8 8.2Z" />
+        <circle cx="11" cy="5" r="0.7" fill="currentColor" stroke="none" />
+      </svg>
+    );
+  }
+  if (name === 'help') {
+    return (
+      <svg {...common}>
+        <circle cx="8" cy="8" r="5.2" />
+        <path d="M6.4 6.4a1.6 1.6 0 1 1 2.2 1.5c-.5.3-.8.7-.8 1.3" />
+        <path d="M8 11.2h.01" />
+      </svg>
+    );
+  }
+  if (name === 'card') {
+    return (
+      <svg {...common}>
+        <rect x="2.4" y="4.2" width="11.2" height="7.6" rx="0.8" />
+        <path d="M2.4 7h11.2" />
+      </svg>
+    );
+  }
+  if (name === 'bank') {
+    return (
+      <svg {...common}>
+        <path d="M2.6 6.2 8 3.2l5.4 3" />
+        <path d="M4 6.6v5.2M8 6.6v5.2M12 6.6v5.2M3 12.4h10" />
+      </svg>
+    );
+  }
+  if (name === 'calc') {
+    return (
+      <svg {...common}>
+        <rect x="3.2" y="2.6" width="9.6" height="10.8" rx="0.8" />
+        <path d="M5.4 5h5.2M5.4 8h1.2M7.4 8h1.2M9.4 8h1.2M5.4 10.4h1.2M7.4 10.4h1.2M9.4 10.4h1.2" />
+      </svg>
+    );
+  }
+  if (name === 'users') {
+    return (
+      <svg {...common}>
+        <circle cx="6" cy="5.4" r="1.8" />
+        <path d="M2.8 12c.3-2 1.6-3.1 3.2-3.1S8.9 10 9.2 12" />
+        <circle cx="10.6" cy="5.8" r="1.4" />
+        <path d="M11 8.9c1.4.2 2.4 1.2 2.6 3.1" />
+      </svg>
+    );
+  }
+  if (name === 'gift') {
+    return (
+      <svg {...common}>
+        <path d="M3 7.2h10v6.2H3z" />
+        <path d="M2.6 4.8h10.8v2.4H2.6z" />
+        <path d="M8 4.8v8.6" />
+      </svg>
+    );
+  }
+  if (name === 'share') {
+    return (
+      <svg {...common}>
+        <circle cx="4" cy="8" r="1.5" />
+        <circle cx="11.4" cy="4.4" r="1.5" />
+        <circle cx="11.4" cy="11.6" r="1.5" />
+        <path d="M5.4 7.4 9.8 5.1M5.4 8.7l4.4 2.2" />
+      </svg>
+    );
+  }
+  if (name === 'image') {
+    return (
+      <svg {...common}>
+        <rect x="2.6" y="3.4" width="10.8" height="9.2" rx="0.8" />
+        <circle cx="6" cy="6.6" r="1" />
+        <path d="M2.8 11.2 6.4 8.2l2.2 1.8 1.6-1.4 2.8 2.6" />
+      </svg>
+    );
+  }
+  if (name === 'settings') {
+    return (
+      <svg {...common}>
+        <circle cx="8" cy="8" r="2.1" />
+        <path d="M8 2.8v1.4M8 11.8v1.4M2.8 8h1.4M11.8 8h1.4M4.3 4.3l1 1M10.7 10.7l1 1M11.7 4.3l-1 1M5.3 10.7l-1 1" />
+      </svg>
+    );
+  }
+  return (
+    <svg {...common}>
+      <path d="M4 3.2h8v9.6H4z" />
+      <path d="M6 6.2h4M6 8.6h3" />
+    </svg>
+  );
+};
+
+const NAV_ICONS = {
+  dashboard: 'home',
+  pages: 'file',
+  news: 'news',
+  articles: 'article',
+  categories: 'tag',
+  faq: 'help',
+  loans: 'card',
+  'debit-cards': 'card',
+  'credit-cards': 'card',
+  calculators: 'calc',
+  banks: 'bank',
+  'users-list': 'users',
+  applications: 'file',
+  bonuses: 'gift',
+  referrals: 'share',
+  images: 'image',
+  'settings-site': 'settings',
+  'settings-header': 'settings',
+  'settings-footer': 'settings',
+  'settings-menu': 'settings',
+  'settings-seo': 'settings',
+  audit: 'file',
+};
+
 const AdminLayout = () => {
   const { admin, logout, role } = useAdminAuth();
   const navigate = useNavigate();
@@ -24,36 +185,13 @@ const AdminLayout = () => {
   const nav = useMemo(() => getAllowedNav(role), [role]);
   const breadcrumbs = useMemo(() => getBreadcrumbs(location.pathname), [location.pathname]);
   const current = useMemo(() => findNavItem(location.pathname), [location.pathname]);
-  const pageTitle = location.pathname === '/admin' ? 'Dashboard' : current?.label || 'Раздел';
-
-  const [openGroups, setOpenGroups] = useState(() => {
-    const initial = {};
-    nav.forEach((item) => {
-      if (item.children) initial[item.key] = true;
-    });
-    return initial;
-  });
+  const pageTitle = location.pathname === '/admin' ? 'Обзор' : current?.label || 'Раздел';
 
   useEffect(() => {
     setSidebarOpen(false);
     setUserMenuOpen(false);
     setNotifyOpen(false);
   }, [location.pathname]);
-
-  useEffect(() => {
-    setOpenGroups((prev) => {
-      const next = { ...prev };
-      nav.forEach((item) => {
-        if (!item.children) return;
-        if (next[item.key] === undefined) next[item.key] = true;
-        const active = item.children.some(
-          (child) => location.pathname === child.path || location.pathname.startsWith(`${child.path}/`)
-        );
-        if (active) next[item.key] = true;
-      });
-      return next;
-    });
-  }, [location.pathname, nav]);
 
   useEffect(() => {
     const onPointerDown = (event) => {
@@ -80,10 +218,6 @@ const AdminLayout = () => {
     navigate('/admin/login', { replace: true });
   };
 
-  const toggleGroup = (key) => {
-    setOpenGroups((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
-
   const searchResults = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return [];
@@ -99,13 +233,12 @@ const AdminLayout = () => {
     <div className={`cms-shell${sidebarOpen ? ' is-sidebar-open' : ''}`}>
       <div className="cms-sidebar-backdrop" onClick={() => setSidebarOpen(false)} aria-hidden={!sidebarOpen} />
 
-      <aside className="cms-sidebar" aria-label="Навигация CMS">
+      <aside className="cms-sidebar" aria-label="Навигация">
         <div className="cms-sidebar__top">
           <Link to="/admin" className="cms-brand" onClick={() => setSidebarOpen(false)}>
-            <span className="cms-brand__mark">Е</span>
             <span className="cms-brand__text">
               <strong>ЕнотМани</strong>
-              <span>Content Studio</span>
+              <span>Admin</span>
             </span>
           </Link>
           <button
@@ -130,38 +263,30 @@ const AdminLayout = () => {
                   className={({ isActive }) => `cms-nav__link${isActive ? ' is-active' : ''}`}
                   onClick={() => setSidebarOpen(false)}
                 >
+                  <span className="cms-nav__icon">
+                    <Icon name={NAV_ICONS[item.key] || 'file'} />
+                  </span>
                   {item.label}
                 </NavLink>
               );
             }
 
-            const groupActive = item.children.some(
-              (child) => location.pathname === child.path || location.pathname.startsWith(`${child.path}/`)
-            );
-            const expanded = Boolean(openGroups[item.key]);
-
             return (
-              <div key={item.key} className={`cms-nav__group${groupActive ? ' is-active' : ''}${expanded ? ' is-open' : ''}`}>
-                <button type="button" className="cms-nav__group-btn" onClick={() => toggleGroup(item.key)}>
-                  <span>{item.label}</span>
-                  <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
-                    <path d="M5 7.5L10 12.5L15 7.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                  </svg>
-                </button>
-                {expanded ? (
-                  <div className="cms-nav__children">
-                    {item.children.map((child) => (
-                      <NavLink
-                        key={child.key}
-                        to={child.path}
-                        className={({ isActive }) => `cms-nav__sublink${isActive ? ' is-active' : ''}`}
-                        onClick={() => setSidebarOpen(false)}
-                      >
-                        {child.label}
-                      </NavLink>
-                    ))}
-                  </div>
-                ) : null}
+              <div key={item.key} className="cms-nav__section">
+                <span className="cms-nav__label">{item.label}</span>
+                {item.children.map((child) => (
+                  <NavLink
+                    key={child.key}
+                    to={child.path}
+                    className={({ isActive }) => `cms-nav__sublink${isActive ? ' is-active' : ''}`}
+                    onClick={() => setSidebarOpen(false)}
+                  >
+                    <span className="cms-nav__icon">
+                      <Icon name={NAV_ICONS[child.key] || 'file'} />
+                    </span>
+                    {child.label}
+                  </NavLink>
+                ))}
               </div>
             );
           })}
@@ -181,16 +306,37 @@ const AdminLayout = () => {
               <span />
               <span />
             </button>
+            <div className="cms-header__title-wrap">
+              <nav className="cms-breadcrumbs" aria-label="Хлебные крошки">
+                {breadcrumbs.map((crumb, index) => {
+                  const last = index === breadcrumbs.length - 1;
+                  return (
+                    <span key={`${crumb.path}-${crumb.label}`} className="cms-breadcrumbs__item">
+                      {index > 0 ? <span className="cms-breadcrumbs__sep">/</span> : null}
+                      {last ? (
+                        <span aria-current="page">{crumb.label}</span>
+                      ) : (
+                        <Link to={crumb.path}>{crumb.label}</Link>
+                      )}
+                    </span>
+                  );
+                })}
+              </nav>
+              <h1 className="cms-header__title">{pageTitle}</h1>
+            </div>
+          </div>
+
+          <div className="cms-header__right">
             <div className="cms-search">
-              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-                <circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" strokeWidth="1.8" />
-                <path d="M16.5 16.5L21 21" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+                <circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" strokeWidth="1.6" />
+                <path d="M16.5 16.5L21 21" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
               </svg>
               <input
                 type="search"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Поиск по разделам…"
+                placeholder="Поиск разделов"
                 aria-label="Поиск по разделам"
               />
               {searchResults.length ? (
@@ -211,9 +357,7 @@ const AdminLayout = () => {
                 </div>
               ) : null}
             </div>
-          </div>
 
-          <div className="cms-header__right">
             <div className="cms-header__slot" ref={notifyRef}>
               <button
                 type="button"
@@ -225,15 +369,15 @@ const AdminLayout = () => {
                   setUserMenuOpen(false);
                 }}
               >
-                <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
                   <path
                     d="M6 17h12l-1.2-1.8a6.4 6.4 0 0 1-1.1-3.7V9.5a3.7 3.7 0 1 0-7.4 0v1.9c0 1.3-.4 2.6-1.1 3.7L6 17Z"
                     fill="none"
                     stroke="currentColor"
-                    strokeWidth="1.7"
+                    strokeWidth="1.6"
                     strokeLinejoin="round"
                   />
-                  <path d="M10 18.5a2 2 0 0 0 4 0" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+                  <path d="M10 18.5a2 2 0 0 0 4 0" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
                 </svg>
                 <span className="cms-badge">3</span>
               </button>
@@ -276,7 +420,7 @@ const AdminLayout = () => {
                     <span>{admin?.email}</span>
                   </div>
                   <button type="button" onClick={() => navigate('/admin')}>
-                    Dashboard
+                    Обзор
                   </button>
                   <button type="button" onClick={onLogout}>
                     Выйти
@@ -288,24 +432,6 @@ const AdminLayout = () => {
         </header>
 
         <div className="cms-body">
-          <div className="cms-pagehead">
-            <nav className="cms-breadcrumbs" aria-label="Хлебные крошки">
-              {breadcrumbs.map((crumb, index) => {
-                const last = index === breadcrumbs.length - 1;
-                return (
-                  <span key={`${crumb.path}-${crumb.label}`} className="cms-breadcrumbs__item">
-                    {index > 0 ? <span className="cms-breadcrumbs__sep">/</span> : null}
-                    {last ? (
-                      <span aria-current="page">{crumb.label}</span>
-                    ) : (
-                      <Link to={crumb.path}>{crumb.label}</Link>
-                    )}
-                  </span>
-                );
-              })}
-            </nav>
-            <h1 className="cms-pagehead__title">{pageTitle}</h1>
-          </div>
           <div className="cms-content">
             <Outlet />
           </div>

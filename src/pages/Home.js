@@ -15,6 +15,7 @@ import catShopsIcon from '../img_main/cat-shops.svg';
 import { EDUCATION_ITEMS } from './EducationData';
 import { SERVICES_ITEMS } from './Services';
 import { SHOPS_ITEMS } from './Shops';
+import { fetchCatalogProducts } from '../data/productsRuntimeApi';
 import articleCredits from '../img_main/article-credits.png';
 import articleCards from '../img_main/article-cards.png';
 import articleSecurity from '../img_main/article-security.png';
@@ -114,6 +115,22 @@ const Home = () => {
   const [activeTab, setActiveTab] = useState('consumer');
   const { isFavorite, toggleFavorite } = useFavorites();
   const current = OFFER_TABS[activeTab];
+
+  useEffect(() => {
+    const prefetch = () => {
+      ['loans', 'debit-cards', 'credit-cards'].forEach((slug) => {
+        fetchCatalogProducts(slug).catch(() => {});
+      });
+    };
+
+    if (typeof window.requestIdleCallback === 'function') {
+      const idleId = window.requestIdleCallback(prefetch, { timeout: 3000 });
+      return () => window.cancelIdleCallback(idleId);
+    }
+
+    const timerId = window.setTimeout(prefetch, 400);
+    return () => window.clearTimeout(timerId);
+  }, []);
 
   useEffect(() => {
     const nodes = document.querySelectorAll('.home-reveal');

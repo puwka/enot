@@ -190,7 +190,7 @@ const CmsFaqPage = () => {
                           Draft
                         </button>
                       )}
-                      <button type="button" className="admin-btn admin-btn--ghost" onClick={() => setDeleteId(item.id)}>
+                      <button type="button" className="admin-btn admin-btn--danger" onClick={() => setDeleteId(item.id)}>
                         Удалить
                       </button>
                     </div>

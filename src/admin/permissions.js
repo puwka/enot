@@ -14,7 +14,7 @@ export const ADMIN_NAV = [
   {
     key: 'dashboard',
     path: '/admin',
-    label: 'Dashboard',
+    label: 'Обзор',
     end: true,
   },
   {
@@ -35,9 +35,7 @@ export const ADMIN_NAV = [
       { key: 'loans', path: '/admin/products/loans', label: 'Кредиты', permission: 'products' },
       { key: 'debit-cards', path: '/admin/products/debit-cards', label: 'Дебетовые карты', permission: 'products' },
       { key: 'credit-cards', path: '/admin/products/credit-cards', label: 'Кредитные карты', permission: 'products' },
-      { key: 'obuchenie', path: '/admin/products/obuchenie', label: 'Обучение', permission: 'products' },
-      { key: 'services', path: '/admin/products/services', label: 'Сервисы', permission: 'products' },
-      { key: 'shops', path: '/admin/products/shops', label: 'Магазины', permission: 'products' },
+      { key: 'calculators', path: '/admin/products/calculators', label: 'Калькуляторы', permission: 'products' },
       { key: 'banks', path: '/admin/products/banks', label: 'Банки', permission: 'products' },
     ],
   },
@@ -112,7 +110,7 @@ export const findNavItem = (pathname) => {
 export const getBreadcrumbs = (pathname) => {
   const crumbs = [{ label: 'Админ', path: '/admin' }];
   if (pathname === '/admin') {
-    crumbs.push({ label: 'Dashboard', path: '/admin' });
+    crumbs.push({ label: 'Обзор', path: '/admin' });
     return crumbs;
   }
 

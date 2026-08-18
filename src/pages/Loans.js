@@ -1,4 +1,5 @@
 import CatalogPage from '../components/CatalogPage';
+import { useCatalogProducts } from '../hooks/useCatalogProducts';
 import finmi from '../images/FinMi.webp';
 import fin from '../images/finters.webp';
 import sosed from '../images/sosed.webp';
@@ -44,17 +45,21 @@ export const LOANS_CATALOG = {
   items: LOANS_ITEMS,
 };
 
-const Loans = () => (
-  <CatalogPage
-    title="Кредиты и займы"
-    description="Сравните актуальные предложения МФО и выберите подходящие условия по сумме, сроку и ставке."
-    variant="loan"
-    catalogPath="/loans"
-    catalogLabel="Кредиты и займы"
-    catalogPrefix="loans"
-    items={LOANS_ITEMS}
-    ctaLabel="Получить деньги"
-  />
-);
+const Loans = () => {
+  const items = useCatalogProducts('loans', LOANS_ITEMS);
+
+  return (
+    <CatalogPage
+      title="Кредиты и займы"
+      description="Сравните актуальные предложения МФО и выберите подходящие условия по сумме, сроку и ставке."
+      variant="loan"
+      catalogPath="/loans"
+      catalogLabel="Кредиты и займы"
+      catalogPrefix="loans"
+      items={items}
+      ctaLabel="Получить деньги"
+    />
+  );
+};
 
 export default Loans;

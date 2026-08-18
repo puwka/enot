@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { adminDashboard } from '../adminApi';
 
 const formatNumber = (value) =>
@@ -40,7 +41,11 @@ const ActivityList = ({ items, emptyText }) => {
         <li key={item.id}>
           <div>
             <strong>{item.actor}</strong>
-            <span>{item.action}{item.meta ? ` · ${item.meta}` : ''}{item.entity ? ` · ${item.entity}` : ''}</span>
+            <span>
+              {item.action}
+              {item.meta ? ` · ${item.meta}` : ''}
+              {item.entity ? ` · ${item.entity}` : ''}
+            </span>
           </div>
           <em>{formatDateTime(item.at)}</em>
         </li>
@@ -81,18 +86,8 @@ const AdminDashboard = () => {
   if (loading) {
     return (
       <div className="cms-dash">
-        <section className="cms-panel">
-          <SkeletonBlock />
-        </section>
-        <div className="cms-dash__grid cms-dash__grid--3">
-          <article className="cms-stat"><SkeletonBlock /></article>
-          <article className="cms-stat"><SkeletonBlock /></article>
-          <article className="cms-stat"><SkeletonBlock /></article>
-        </div>
-        <div className="cms-dash__split">
-          <section className="cms-panel"><SkeletonBlock /></section>
-          <section className="cms-panel"><SkeletonBlock /></section>
-        </div>
+        <SkeletonBlock />
+        <SkeletonBlock />
       </div>
     );
   }
@@ -118,125 +113,89 @@ const AdminDashboard = () => {
   const userActivity = data?.userActivity || [];
   const adminActivity = data?.adminActivity || [];
   const recentChanges = data?.recentChanges || [];
+  const productsTotal = (Number(products.active) || 0) + (Number(products.inactive) || 0);
 
   return (
     <div className="cms-dash">
-      <section className="cms-panel">
-        <div className="cms-dash-section__head">
-          <h2>Пользователи</h2>
+      <div className="cms-dash-intro">
+        <div>
+          <h2>Обзор за сегодня</h2>
+          <p>Сводка по пользователям, контенту и продуктам. Отсюда обычно начинают рабочий день.</p>
         </div>
-        <div className="cms-dash__grid cms-dash__grid--3">
-          <article className="cms-stat">
-            <span>Всего</span>
-            <strong>{formatNumber(users.total)}</strong>
-          </article>
-          <article className="cms-stat">
-            <span>Новых сегодня</span>
-            <strong>{formatNumber(users.today)}</strong>
-          </article>
-          <article className="cms-stat">
-            <span>Новых за неделю</span>
-            <strong>{formatNumber(users.week)}</strong>
-          </article>
+        <div className="cms-dash-intro__meta">
+          <span>Текущий месяц</span>
+          <button type="button" className="admin-btn admin-btn--secondary" onClick={load}>
+            Обновить
+          </button>
+          <Link className="admin-btn admin-btn--primary" to="/admin/pages">
+            К страницам
+          </Link>
         </div>
-      </section>
-
-      <div className="cms-dash__split">
-        <section className="cms-panel">
-          <div className="cms-dash-section__head">
-            <h2>Контент</h2>
-          </div>
-          <div className="cms-dash__grid cms-dash__grid--3">
-            <article className="cms-stat cms-stat--compact">
-              <span>Новости</span>
-              <strong>{formatNumber(content.news)}</strong>
-            </article>
-            <article className="cms-stat cms-stat--compact">
-              <span>Статьи</span>
-              <strong>{formatNumber(content.articles)}</strong>
-            </article>
-            <article className="cms-stat cms-stat--compact">
-              <span>Страницы</span>
-              <strong>{formatNumber(content.pages)}</strong>
-            </article>
-          </div>
-        </section>
-
-        <section className="cms-panel">
-          <div className="cms-dash-section__head">
-            <h2>Продукты</h2>
-          </div>
-          <div className="cms-dash__grid cms-dash__grid--2">
-            <article className="cms-stat cms-stat--compact">
-              <span>Активные</span>
-              <strong>{formatNumber(products.active)}</strong>
-            </article>
-            <article className="cms-stat cms-stat--compact">
-              <span>Неактивные</span>
-              <strong>{formatNumber(products.inactive)}</strong>
-            </article>
-          </div>
-        </section>
       </div>
 
-      <section className="cms-panel">
+      <div className="cms-kpi">
+        <article className="cms-kpi__item">
+          <span>Пользователи</span>
+          <strong>{formatNumber(users.total)}</strong>
+          <em>+{formatNumber(users.week)} за неделю</em>
+        </article>
+        <article className="cms-kpi__item">
+          <span>Новости</span>
+          <strong>{formatNumber(content.news)}</strong>
+          <em>
+            {formatNumber(content.articles)} статей · {formatNumber(content.pages)} страниц
+          </em>
+        </article>
+        <article className="cms-kpi__item">
+          <span>Продукты</span>
+          <strong>{formatNumber(productsTotal)}</strong>
+          <em>{formatNumber(products.active)} активных</em>
+        </article>
+        <article className="cms-kpi__item">
+          <span>Бонусы</span>
+          <strong>{formatNumber(bonuses.turnover)}</strong>
+          <em>{formatNumber(bonuses.credited)} начислено за период</em>
+        </article>
+      </div>
+
+      <section>
         <div className="cms-dash-section__head">
-          <h2>Бонусы</h2>
+          <h2>Последние изменения</h2>
         </div>
-        <div className="cms-dash__grid cms-dash__grid--3">
-          <article className="cms-stat">
-            <span>Общий оборот</span>
-            <strong>{formatNumber(bonuses.turnover)}</strong>
-          </article>
-          <article className="cms-stat">
-            <span>Начислено</span>
-            <strong>{formatNumber(bonuses.credited)}</strong>
-          </article>
-          <article className="cms-stat">
-            <span>Списано</span>
-            <strong>{formatNumber(bonuses.debited)}</strong>
-          </article>
-        </div>
+        {recentChanges.length ? (
+          <ul className="cms-dash-list">
+            {recentChanges.map((item) => (
+              <li key={item.id}>
+                <div>
+                  <strong>{item.actor}</strong>
+                  <span>
+                    {item.action}
+                    {item.entity ? ` «${item.entity}»` : ''}
+                  </span>
+                </div>
+                <em>{formatDateTime(item.at)}</em>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <EmptyList text="Изменений пока нет." />
+        )}
       </section>
 
       <div className="cms-dash__split">
-        <section className="cms-panel">
+        <section>
           <div className="cms-dash-section__head">
             <h2>Активность пользователей</h2>
           </div>
           <ActivityList items={userActivity} emptyText="Пока нет действий пользователей." />
         </section>
-        <section className="cms-panel">
+        <section>
           <div className="cms-dash-section__head">
             <h2>Активность администраторов</h2>
           </div>
           <ActivityList items={adminActivity} emptyText="Пока нет действий администраторов." />
         </section>
       </div>
-
-      <section className="cms-panel">
-        <div className="cms-dash-section__head">
-          <h2>Последние изменения</h2>
-        </div>
-        {recentChanges.length ? (
-          <div className="cms-dash-table">
-            <div className="cms-dash-table__head">
-              <span>Кто</span>
-              <span>Что изменил</span>
-              <span>Когда</span>
-            </div>
-            {recentChanges.map((item) => (
-              <div key={item.id} className="cms-dash-table__row">
-                <strong>{item.actor}</strong>
-                <span>{item.action}{item.entity ? ` · ${item.entity}` : ''}</span>
-                <em>{formatDateTime(item.at)}</em>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <EmptyList text="Изменений пока нет." />
-        )}
-      </section>
     </div>
   );
 };

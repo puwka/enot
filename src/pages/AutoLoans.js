@@ -1,4 +1,5 @@
 import CatalogPage from '../components/CatalogPage';
+import { useCatalogProducts } from '../hooks/useCatalogProducts';
 import zaimerkart from '../images/zaimer.webp';
 import bars from '../images/bars.webp';
 import rus from '../images/rus.webp';
@@ -25,17 +26,21 @@ export const AUTO_LOANS_CATALOG = {
   items: AUTO_LOANS_ITEMS,
 };
 
-const AutoLoans = () => (
-  <CatalogPage
-    title="Кредитные карты"
-    description="Лимиты, льготный период и рассрочка — сравните предложения банков в одном списке."
-    variant="loan"
-    catalogPath="/auto-loans"
-    catalogLabel="Кредитные карты"
-    catalogPrefix="cards-credit"
-    items={AUTO_LOANS_ITEMS}
-    ctaLabel="Подробнее"
-  />
-);
+const AutoLoans = () => {
+  const items = useCatalogProducts('credit-cards', AUTO_LOANS_ITEMS);
+
+  return (
+    <CatalogPage
+      title="Кредитные карты"
+      description="Лимиты, льготный период и рассрочка — сравните предложения банков в одном списке."
+      variant="loan"
+      catalogPath="/auto-loans"
+      catalogLabel="Кредитные карты"
+      catalogPrefix="cards-credit"
+      items={items}
+      ctaLabel="Подробнее"
+    />
+  );
+};
 
 export default AutoLoans;

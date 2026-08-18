@@ -4,7 +4,7 @@ import { cmsCreate, cmsDelete, cmsGet, cmsList, cmsPublish, cmsUnpublish, cmsUpd
 import { CONTENT_STATUSES, slugify } from '../cms/cmsConstants';
 import ContentBlocksEditor, { renderContentPreview } from '../cms/ContentBlocksEditor';
 import { getSiteArticleBySlug, getSiteNewsBySlug } from '../cms/siteContent';
-import { CmsAlert, CmsLoading, ConfirmDialog, PreviewModal, StatusBadge } from '../cms/CmsUi';
+import { CmsAlert, CmsLoading, ConfirmDialog, PreviewModal } from '../cms/CmsUi';
 import '../cms/Cms.css';
 
 const emptyForm = {
@@ -134,34 +134,28 @@ const CmsContentEdit = ({ entity, listPath, titleLabel }) => {
   if (loading) return <CmsLoading />;
 
   return (
-    <div className="cms-dash">
-      <section className="cms-panel">
+    <div className="cms-editor">
+      <div className="cms-editor__main">
         <div className="cms-toolbar">
           <div className="cms-toolbar__left">
-            <StatusBadge status={form.status} />
             <strong>{isNew ? `Новая ${titleLabel}` : form.title || titleLabel}</strong>
             {isSite ? <span className="cms-muted">с сайта</span> : null}
           </div>
           <div className="cms-toolbar__right">
             <button type="button" className="admin-btn admin-btn--ghost" onClick={() => setPreviewOpen(true)}>
-              Preview
+              Предпросмотр
             </button>
-            <button type="button" className="admin-btn admin-btn--ghost" onClick={save}>
-              {isSite ? 'Сохранить в CMS' : 'Draft / Сохранить'}
+            <button type="button" className="admin-btn admin-btn--secondary" onClick={save}>
+              {isSite ? 'Сохранить в CMS' : 'Сохранить'}
             </button>
             {!isNew && !isSite && form.status !== 'published' ? (
               <button type="button" className="admin-btn admin-btn--primary" onClick={() => cmsPublish(entity, id).then(load)}>
-                Publish
+                Опубликовать
               </button>
             ) : null}
             {!isNew && !isSite && form.status === 'published' ? (
               <button type="button" className="admin-btn admin-btn--ghost" onClick={() => cmsUnpublish(entity, id).then(load)}>
                 Снять с публикации
-              </button>
-            ) : null}
-            {!isNew && !isSite ? (
-              <button type="button" className="admin-btn admin-btn--ghost" onClick={() => setDeleteOpen(true)}>
-                Удалить
               </button>
             ) : null}
           </div>
@@ -171,33 +165,71 @@ const CmsContentEdit = ({ entity, listPath, titleLabel }) => {
         <CmsAlert type="ok">{message}</CmsAlert>
 
         <div className="cms-form">
-          <div className="cms-form__grid">
+          <div className="cms-form-section">
+            <h3 className="cms-form-section__title">Основная информация</h3>
+            <div className="cms-form__grid">
+              <label className="cms-field">
+                <span>Заголовок</span>
+                <input
+                  value={form.title}
+                  onChange={(e) => {
+                    const title = e.target.value;
+                    setForm((prev) => ({ ...prev, title, slug: prev.slug || slugify(title) }));
+                  }}
+                />
+              </label>
+              <label className="cms-field">
+                <span>Slug</span>
+                <input value={form.slug} onChange={(e) => patch('slug', slugify(e.target.value))} />
+              </label>
+            </div>
+            <div className="cms-form__grid">
+              <label className="cms-field">
+                <span>Автор</span>
+                <input value={form.author} onChange={(e) => patch('author', e.target.value)} />
+              </label>
+              <label className="cms-field">
+                <span>Время чтения</span>
+                <input value={form.read_time} onChange={(e) => patch('read_time', e.target.value)} placeholder="5 мин" />
+              </label>
+            </div>
             <label className="cms-field">
-              <span>Заголовок</span>
-              <input
-                value={form.title}
+              <span>Краткое описание</span>
+              <textarea
+                value={form.excerpt}
                 onChange={(e) => {
-                  const title = e.target.value;
-                  setForm((prev) => ({ ...prev, title, slug: prev.slug || slugify(title) }));
+                  patch('excerpt', e.target.value);
+                  patch('lead', e.target.value);
                 }}
               />
             </label>
-            <label className="cms-field">
-              <span>Slug</span>
-              <input value={form.slug} onChange={(e) => patch('slug', slugify(e.target.value))} />
-            </label>
           </div>
-          <div className="cms-form__grid">
+        </div>
+
+        <div className="cms-form-section">
+          <h3 className="cms-form-section__title">Контент</h3>
+          <p className="cms-panel__lead">Блоки статьи без HTML.</p>
+          <ContentBlocksEditor
+            value={form.content_blocks}
+            onChange={(content_blocks) => patch('content_blocks', content_blocks)}
+          />
+        </div>
+      </div>
+
+      <aside className="cms-editor__side">
+        <div className="cms-form-section">
+          <h3 className="cms-form-section__title">Публикация</h3>
+          <div className="cms-form">
             <label className="cms-field">
-              <span>Автор</span>
-              <input value={form.author} onChange={(e) => patch('author', e.target.value)} />
+              <span>Статус</span>
+              <select value={form.status} onChange={(e) => patch('status', e.target.value)}>
+                {CONTENT_STATUSES.map((item) => (
+                  <option key={item.value} value={item.value}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
             </label>
-            <label className="cms-field">
-              <span>Время чтения</span>
-              <input value={form.read_time} onChange={(e) => patch('read_time', e.target.value)} placeholder="5 мин" />
-            </label>
-          </div>
-          <div className="cms-form__grid">
             <label className="cms-field">
               <span>Категория</span>
               <select
@@ -212,32 +244,23 @@ const CmsContentEdit = ({ entity, listPath, titleLabel }) => {
                 ))}
               </select>
             </label>
-            <label className="cms-field">
-              <span>Статус</span>
-              <select value={form.status} onChange={(e) => patch('status', e.target.value)}>
-                {CONTENT_STATUSES.map((item) => (
-                  <option key={item.value} value={item.value}>
-                    {item.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+            {!isNew && !isSite ? (
+              <button type="button" className="admin-btn admin-btn--danger" onClick={() => setDeleteOpen(true)}>
+                Удалить
+              </button>
+            ) : null}
           </div>
-          <label className="cms-field">
-            <span>Краткое описание / excerpt</span>
-            <textarea
-              value={form.excerpt}
-              onChange={(e) => {
-                patch('excerpt', e.target.value);
-                patch('lead', e.target.value);
-              }}
-            />
-          </label>
+        </div>
+        <div className="cms-form-section">
+          <h3 className="cms-form-section__title">Изображение</h3>
           <label className="cms-field">
             <span>Обложка (URL)</span>
             <input value={form.cover_url} onChange={(e) => patch('cover_url', e.target.value)} />
           </label>
-          <div className="cms-form__grid">
+        </div>
+        <div className="cms-form-section">
+          <h3 className="cms-form-section__title">SEO</h3>
+          <div className="cms-form">
             <label className="cms-field">
               <span>SEO title</span>
               <input value={form.meta_title} onChange={(e) => patch('meta_title', e.target.value)} />
@@ -248,18 +271,7 @@ const CmsContentEdit = ({ entity, listPath, titleLabel }) => {
             </label>
           </div>
         </div>
-      </section>
-
-      <section className="cms-panel">
-        <h2 style={{ marginTop: 0, fontSize: 17 }}>Контент / блоки</h2>
-        <p className="cms-panel__lead">Визуальный редактор блоков — без HTML.</p>
-        <div style={{ marginTop: 14 }}>
-          <ContentBlocksEditor
-            value={form.content_blocks}
-            onChange={(content_blocks) => patch('content_blocks', content_blocks)}
-          />
-        </div>
-      </section>
+      </aside>
 
       <PreviewModal open={previewOpen} title={form.title || 'Preview'} onClose={() => setPreviewOpen(false)}>
         {form.cover_url ? <img src={form.cover_url} alt="" /> : null}

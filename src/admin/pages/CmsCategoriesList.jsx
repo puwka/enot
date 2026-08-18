@@ -128,7 +128,7 @@ const CmsCategoriesList = () => {
                     <StatusBadge status={item.status} />
                   </td>
                   <td>
-                    <button type="button" className="admin-btn admin-btn--ghost" onClick={() => setDeleteId(item.id)}>
+                    <button type="button" className="admin-btn admin-btn--danger" onClick={() => setDeleteId(item.id)}>
                       Удалить
                     </button>
                   </td>

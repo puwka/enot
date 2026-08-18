@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { cmsDelete, cmsList, cmsPublish, cmsUnpublish, cmsArchive } from '../cms/cmsApi';
 import { getSitePages, mergePageItems } from '../cms/siteContent';
-import { ConfirmDialog, CmsAlert, CmsLoading, StatusBadge } from '../cms/CmsUi';
+import { ConfirmDialog, CmsAlert, CmsLoading } from '../cms/CmsUi';
 import '../cms/Cms.css';
 
 const CmsPagesList = () => {
@@ -75,7 +75,6 @@ const CmsPagesList = () => {
               <th>Название</th>
               <th>Slug</th>
               <th>Блоки</th>
-              <th>Статус</th>
               <th />
             </tr>
           </thead>
@@ -93,9 +92,6 @@ const CmsPagesList = () => {
                   </td>
                   <td>/{item.slug === 'home' ? '' : item.slug}</td>
                   <td>{blockCount}</td>
-                  <td>
-                    <StatusBadge status={item.status} />
-                  </td>
                   <td>
                     <div className="cms-table__actions">
                       <button type="button" className="admin-btn admin-btn--ghost" onClick={() => navigate(editTo)}>
@@ -116,7 +112,7 @@ const CmsPagesList = () => {
                           <button type="button" className="admin-btn admin-btn--ghost" onClick={() => cmsArchive('pages', item.id).then(load)}>
                             В архив
                           </button>
-                          <button type="button" className="admin-btn admin-btn--ghost" onClick={() => setDeleteId(item.id)}>
+                          <button type="button" className="admin-btn admin-btn--danger" onClick={() => setDeleteId(item.id)}>
                             Удалить
                           </button>
                         </>

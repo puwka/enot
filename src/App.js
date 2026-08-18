@@ -51,6 +51,7 @@ import CmsProductsList from './admin/pages/CmsProductsList';
 import CmsProductEdit from './admin/pages/CmsProductEdit';
 import CmsBanksList from './admin/pages/CmsBanksList';
 import CmsCategoriesList from './admin/pages/CmsCategoriesList';
+import CmsCalculatorSettings from './admin/pages/CmsCalculatorSettings';
 import { MetrikaCounter } from 'react-metrika';
 import './App.css';
 
@@ -272,50 +273,10 @@ function App() {
                     }
                   />
                   <Route
-                    path="products/obuchenie"
+                    path="products/calculators"
                     element={
                       <AdminRoleRoute permission="products">
-                        <CmsProductsList sectionKey="obuchenie" />
-                      </AdminRoleRoute>
-                    }
-                  />
-                  <Route
-                    path="products/obuchenie/:id"
-                    element={
-                      <AdminRoleRoute permission="products">
-                        <CmsProductEdit sectionKey="obuchenie" />
-                      </AdminRoleRoute>
-                    }
-                  />
-                  <Route
-                    path="products/services"
-                    element={
-                      <AdminRoleRoute permission="products">
-                        <CmsProductsList sectionKey="services" />
-                      </AdminRoleRoute>
-                    }
-                  />
-                  <Route
-                    path="products/services/:id"
-                    element={
-                      <AdminRoleRoute permission="products">
-                        <CmsProductEdit sectionKey="services" />
-                      </AdminRoleRoute>
-                    }
-                  />
-                  <Route
-                    path="products/shops"
-                    element={
-                      <AdminRoleRoute permission="products">
-                        <CmsProductsList sectionKey="shops" />
-                      </AdminRoleRoute>
-                    }
-                  />
-                  <Route
-                    path="products/shops/:id"
-                    element={
-                      <AdminRoleRoute permission="products">
-                        <CmsProductEdit sectionKey="shops" />
+                        <CmsCalculatorSettings />
                       </AdminRoleRoute>
                     }
                   />

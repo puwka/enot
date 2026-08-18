@@ -38,6 +38,9 @@ const COPY = {
   users: {
     title: 'Пользователи',
     text: 'Профили пользователей публичного кабинета.',
+    groups: [
+      { title: 'Список', rows: [['Поиск', 'По имени, email и телефону'], ['Фильтры', 'Статус, дата регистрации'], ['Действия', 'Добавить пользователя']] },
+    ],
   },
   applications: {
     title: 'Заявки',
@@ -54,26 +57,46 @@ const COPY = {
   media: {
     title: 'Изображения',
     text: 'Медиатека обложек, логотипов и иллюстраций.',
+    groups: [
+      { title: 'Файлы', rows: [['Preview', 'Миниатюра'], ['Название', 'Оригинальное имя файла'], ['Тип / размер', 'webp, png, svg'], ['Дата', 'Загрузка и обновление']] },
+    ],
   },
   'settings-site': {
     title: 'Сайт',
     text: 'Базовые настройки бренда и сервиса.',
+    groups: [
+      { title: 'General', rows: [['Название', 'ЕнотМани'], ['Домен', 'публичный URL'], ['Язык', 'ru']] },
+      { title: 'Contact information', rows: [['Email', 'support@'], ['Телефон', 'горячая линия']] },
+      { title: 'Social networks', rows: [['Telegram', 'ссылка'], ['VK', 'ссылка']] },
+    ],
   },
   'settings-header': {
     title: 'Header',
     text: 'Параметры шапки публичного сайта.',
+    groups: [
+      { title: 'Navigation', rows: [['Логотип', 'файл или SVG'], ['Пункты меню', 'порядок и подписи']] },
+    ],
   },
   'settings-footer': {
     title: 'Footer',
     text: 'Параметры подвала и служебных ссылок.',
+    groups: [
+      { title: 'Navigation', rows: [['Колонки', 'ссылки подвала'], ['Копирайт', 'текст']] },
+    ],
   },
   'settings-menu': {
     title: 'Меню',
     text: 'Пункты навигации header и footer.',
+    groups: [
+      { title: 'Navigation', rows: [['Header', 'основные разделы'], ['Footer', 'служебные ссылки']] },
+    ],
   },
   'settings-seo': {
     title: 'SEO',
     text: 'Мета-данные и поисковые настройки страниц.',
+    groups: [
+      { title: 'SEO', rows: [['Title template', 'шаблон заголовка'], ['Description', 'описание по умолчанию']] },
+    ],
   },
   audit: {
     title: 'Журнал действий',
@@ -83,17 +106,33 @@ const COPY = {
 
 const AdminSection = ({ sectionKey }) => {
   const meta = COPY[sectionKey] || { title: 'Раздел', text: 'Раздел подготовлен для следующего этапа CMS.' };
+  const groups = meta.groups || [
+    {
+      title: meta.title,
+      rows: [
+        ['Статус', 'Раздел доступен в навигации'],
+        ['CRUD', 'Будет подключен на следующем этапе'],
+      ],
+    },
+  ];
 
   return (
-    <section className="cms-panel">
+    <div className="cms-placeholder">
       <p className="cms-panel__lead" style={{ marginTop: 0 }}>
         {meta.text}
       </p>
-      <div className="cms-empty">
-        <strong>{meta.title}</strong>
-        <p>CRUD этого раздела будет подключен на следующем этапе. Сейчас доступен только каркас интерфейса.</p>
-      </div>
-    </section>
+      {groups.map((group) => (
+        <section key={group.title} className="cms-placeholder__group">
+          <h3>{group.title}</h3>
+          {group.rows.map((row) => (
+            <div key={row[0]} className="cms-placeholder__row">
+              <span>{row[0]}</span>
+              <div>{row[1]}</div>
+            </div>
+          ))}
+        </section>
+      ))}
+    </div>
   );
 };
 

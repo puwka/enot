@@ -1,5 +1,6 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { fetchCalculatorConfig } from '../data/productsRuntimeApi';
 import './Calculator.css';
 
 const PURPOSE_OPTIONS = [
@@ -16,21 +17,54 @@ const Calculator = ({
   ctaTo = '/loans',
   ctaLabel = 'Показать предложения',
   footnote = 'Расчёт предварительный',
+  configKey = 'loan',
 }) => {
+  const [config, setConfig] = useState({
+    minAmount: 50000,
+    maxAmount: 5000000,
+    minTerm: 6,
+    maxTerm: 84,
+    rate: 0.008,
+    purposes: PURPOSE_OPTIONS,
+  });
   const [sum, setSum] = useState(500000);
   const [months, setMonths] = useState(36);
   const [purpose, setPurpose] = useState('Любая цель');
   const [purposeOpen, setPurposeOpen] = useState(false);
   const purposeRef = useRef(null);
   const purposeListId = useId();
-  const rate = 0.008;
+  const rate = config.rate;
   const days = months * 30;
 
   const interest = sum * rate * days;
   const total = sum + interest;
   const monthly = total / Math.max(1, months);
-  const sumProgress = ((sum - 50000) / (5000000 - 50000)) * 100;
-  const monthsProgress = ((months - 6) / (84 - 6)) * 100;
+  const sumProgress = ((sum - config.minAmount) / Math.max(1, config.maxAmount - config.minAmount)) * 100;
+  const monthsProgress = ((months - config.minTerm) / Math.max(1, config.maxTerm - config.minTerm)) * 100;
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchCalculatorConfig(configKey)
+      .then((data) => {
+        if (!data || cancelled) return;
+        const nextConfig = {
+          minAmount: Number(data.min_amount ?? 50000),
+          maxAmount: Number(data.max_amount ?? 5000000),
+          minTerm: Number(data.min_term ?? 6),
+          maxTerm: Number(data.max_term ?? 84),
+          rate: Number(data.rate ?? 0.008),
+          purposes: Array.isArray(data.purposes) && data.purposes.length ? data.purposes : PURPOSE_OPTIONS,
+        };
+        setConfig(nextConfig);
+        setSum(Number(data.default_amount ?? nextConfig.minAmount));
+        setMonths(Number(data.default_term ?? nextConfig.minTerm));
+        setPurpose(data.default_purpose || nextConfig.purposes[0] || 'Любая цель');
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [configKey]);
 
   useEffect(() => {
     if (!purposeOpen) return undefined;
@@ -64,8 +98,8 @@ const Calculator = ({
         <div className="calc__amount">{sum.toLocaleString('ru-RU')} ₽</div>
         <input
           type="range"
-          min="50000"
-          max="5000000"
+          min={config.minAmount}
+          max={config.maxAmount}
           step="10000"
           value={sum}
           onChange={(e) => setSum(Number(e.target.value))}
@@ -75,8 +109,8 @@ const Calculator = ({
         />
         {showRangeLabels ? (
           <div className="calc__range">
-            <span>50 000 ₽</span>
-            <span>5 000 000 ₽</span>
+            <span>{config.minAmount.toLocaleString('ru-RU')} ₽</span>
+            <span>{config.maxAmount.toLocaleString('ru-RU')} ₽</span>
           </div>
         ) : null}
       </div>
@@ -88,8 +122,8 @@ const Calculator = ({
         <div className="calc__amount">{months} месяцев</div>
         <input
           type="range"
-          min="6"
-          max="84"
+          min={config.minTerm}
+          max={config.maxTerm}
           step="1"
           value={months}
           onChange={(e) => setMonths(Number(e.target.value))}
@@ -99,8 +133,8 @@ const Calculator = ({
         />
         {showRangeLabels ? (
           <div className="calc__range">
-            <span>6 мес.</span>
-            <span>84 мес.</span>
+            <span>{config.minTerm} мес.</span>
+            <span>{config.maxTerm} мес.</span>
           </div>
         ) : null}
       </div>
@@ -132,7 +166,7 @@ const Calculator = ({
                 role="listbox"
                 aria-labelledby={`${purposeListId}-label`}
               >
-                {PURPOSE_OPTIONS.map((option) => {
+                {config.purposes.map((option) => {
                   const selected = option === purpose;
                   return (
                     <li key={option} role="option" aria-selected={selected}>
@@ -170,7 +204,7 @@ const Calculator = ({
           </div>
           <div className="calc__result-item">
             <span className="calc__result-label">Ставка от</span>
-            <strong className="calc__result-value">11,9%</strong>
+            <strong className="calc__result-value">{(rate * 100).toLocaleString('ru-RU', { maximumFractionDigits: 2 })}%</strong>
           </div>
         </div>
       </div>

@@ -30,7 +30,10 @@ export const cmsRequest = async (action, entity, { id = null, data = {} } = {}) 
     error.code = 'INVALID_SESSION';
     throw error;
   }
-  const { data: payload, error } = await client.rpc('admin_cms', {
+  const rpcName = ['products', 'banks', 'calculator_configs'].includes(String(entity || '').toLowerCase())
+    ? 'admin_products_cms'
+    : 'admin_cms';
+  const { data: payload, error } = await client.rpc(rpcName, {
     p_token: token,
     p_action: action,
     p_entity: entity,

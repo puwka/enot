@@ -1,6 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { getOfferBySlug, getRelatedOffers } from '../data/offersRegistry';
+import {
+  CATALOG_PATH_TO_CATEGORY_SLUG,
+  fetchOfferBySlug,
+  fetchRelatedOffersByCategory,
+} from '../data/productsRuntimeApi';
 import { buildOfferContent } from '../utils/offers';
 import { useFavorites } from '../hooks/useFavorites';
 import HeartIcon from '../components/HeartIcon';
@@ -8,9 +13,37 @@ import './OfferDetail.css';
 
 const OfferDetail = () => {
   const { slug } = useParams();
-  const offer = getOfferBySlug(slug);
-  const related = useMemo(() => getRelatedOffers(offer, 4), [offer]);
+  const [runtimeOffer, setRuntimeOffer] = useState(undefined);
+  const [runtimeRelated, setRuntimeRelated] = useState([]);
+  const offer = runtimeOffer === undefined ? getOfferBySlug(slug) : runtimeOffer || getOfferBySlug(slug);
+  const relatedFallback = useMemo(() => getRelatedOffers(offer, 4), [offer]);
+  const related = runtimeRelated.length ? runtimeRelated : relatedFallback;
   const content = useMemo(() => (offer ? buildOfferContent(offer) : null), [offer]);
+  useEffect(() => {
+    let cancelled = false;
+    const staticOffer = getOfferBySlug(slug);
+    const categorySlug = staticOffer ? CATALOG_PATH_TO_CATEGORY_SLUG[staticOffer.catalogPath] : null;
+    const relatedPromise = categorySlug
+      ? fetchRelatedOffersByCategory(categorySlug, slug, 4).catch(() => [])
+      : Promise.resolve([]);
+
+    Promise.all([fetchOfferBySlug(slug), relatedPromise])
+      .then(([dbOffer, related]) => {
+        if (cancelled) return;
+        setRuntimeOffer(dbOffer);
+        if (related.length) setRuntimeRelated(related);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setRuntimeOffer(null);
+          setRuntimeRelated([]);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [slug]);
+
   const { isFavorite, toggleFavorite } = useFavorites();
   const [openFaq, setOpenFaq] = useState(0);
 

@@ -1,4 +1,5 @@
 import CatalogPage from '../components/CatalogPage';
+import { useCatalogProducts } from '../hooks/useCatalogProducts';
 import vtb from '../images/vtb.webp';
 import alfa from '../images/alfa.webp';
 import mts from '../images/mts.webp';
@@ -43,17 +44,21 @@ export const CARDS_CATALOG = {
   items: CARDS_ITEMS,
 };
 
-const Cards = () => (
-  <CatalogPage
-    title="Дебетовые карты"
-    description="Кэшбэк, проценты на остаток и бесплатное обслуживание — выберите карту под свои задачи."
-    variant="debit"
-    catalogPath="/cards"
-    catalogLabel="Дебетовые карты"
-    catalogPrefix="cards"
-    items={CARDS_ITEMS}
-    ctaLabel="Оформить карту"
-  />
-);
+const Cards = () => {
+  const items = useCatalogProducts('debit-cards', CARDS_ITEMS);
+
+  return (
+    <CatalogPage
+      title="Дебетовые карты"
+      description="Кэшбэк, проценты на остаток и бесплатное обслуживание — выберите карту под свои задачи."
+      variant="debit"
+      catalogPath="/cards"
+      catalogLabel="Дебетовые карты"
+      catalogPrefix="cards"
+      items={items}
+      ctaLabel="Оформить карту"
+    />
+  );
+};
 
 export default Cards;

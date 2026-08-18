@@ -1,6 +1,7 @@
 import { ARTICLES } from '../../data/articles';
 import { NEWS } from '../../data/news';
 import { ALL_OFFERS } from '../../data/offersRegistry';
+import { resolveProductImage } from '../../data/productImages';
 import { slugify } from './cmsConstants';
 
 export const PRODUCT_SECTIONS = {
@@ -555,58 +556,110 @@ export const mergePageItems = (cmsItems = [], siteItems = []) => {
 export const getSiteProducts = (sectionKey) => {
   const section = PRODUCT_SECTIONS[sectionKey];
   if (!section) return [];
-  return ALL_OFFERS.filter((offer) => section.paths.includes(offer.catalogPath)).map((offer, index) => ({
-    id: `site-product:${offer.slug}`,
-    source: 'site',
-    slug: offer.slug,
-    title: offer.title,
-    partner_url: offer.link || '',
-    image_url: asUrl(offer.image),
-    rate_label: offer.rate || '',
-    term_label: offer.term || '',
-    amount_label: offer.sum || '',
-    benefit_1: offer.benefit1 || '',
-    benefit_2: offer.benefit2 || '',
-    benefit_3: offer.benefit3 || '',
-    spec: offer.spec || '',
-    short_description: offer.benefit1 || '',
-    catalog_path: offer.catalogPath,
-    catalog_label: offer.catalogLabel,
-    variant: offer.variant,
-    status: 'published',
-    sort_order: index,
-  }));
+  const paths = section.paths || [];
+  return ALL_OFFERS.filter((offer) => paths.includes(offer.catalogPath)).map((offer, index) => {
+    const bankName = String(offer.bank || offer.title || '').split(' - ')[0].split(' — ')[0].trim();
+    const advantages = [offer.benefit1, offer.benefit2, offer.benefit3].filter(Boolean);
+    return {
+      id: `site-product:${offer.slug}`,
+      source: 'site',
+      slug: offer.slug,
+      title: offer.title,
+      bank_name: bankName,
+      bank_id: null,
+      category_id: null,
+      category_slug: section.categorySlug,
+      product_type: offer.spec || offer.catalogLabel || '',
+      apr_rate: null,
+      rate_label: offer.rate || '',
+      amount_min: null,
+      amount_max: null,
+      amount_label: offer.sum || '',
+      term_min: null,
+      term_max: null,
+      term_label: offer.term || '',
+      monthly_payment: null,
+      commission: '',
+      description: offer.benefit1 || '',
+      conditions: offer.benefit2 || '',
+      advantages,
+      partner_url: offer.link || '',
+      link: offer.link || '',
+      logo_url: asUrl(offer.image),
+      image_url: asUrl(offer.image),
+      benefit_1: offer.benefit1 || '',
+      benefit_2: offer.benefit2 || '',
+      benefit_3: offer.benefit3 || '',
+      spec: offer.spec || '',
+      short_description: offer.benefit1 || '',
+      catalog_path: offer.catalogPath,
+      catalog_label: offer.catalogLabel,
+      variant: offer.variant,
+      active: true,
+      featured: false,
+      status: 'published',
+      sort_order: index,
+    };
+  });
 };
 
 export const getSiteProductBySlug = (slug) => {
   const offer = ALL_OFFERS.find((item) => item.slug === slug);
   if (!offer) return null;
-  return {
-    id: `site-product:${offer.slug}`,
-    source: 'site',
-    slug: offer.slug,
-    title: offer.title,
-    partner_url: offer.link || '',
-    image_url: asUrl(offer.image),
-    rate_label: offer.rate || '',
-    term_label: offer.term || '',
-    amount_label: offer.sum || '',
-    benefit_1: offer.benefit1 || '',
-    benefit_2: offer.benefit2 || '',
-    benefit_3: offer.benefit3 || '',
-    spec: offer.spec || '',
-    short_description: offer.benefit1 || '',
-    catalog_path: offer.catalogPath,
-    catalog_label: offer.catalogLabel,
-    variant: offer.variant,
-    status: 'published',
-    sort_order: 0,
-  };
+  const sectionKey = Object.keys(PRODUCT_SECTIONS).find((key) =>
+    (PRODUCT_SECTIONS[key].paths || []).includes(offer.catalogPath)
+  );
+  if (!sectionKey) {
+    const bankName = String(offer.bank || offer.title || '').split(' - ')[0].split(' — ')[0].trim();
+    return {
+      id: `site-product:${offer.slug}`,
+      source: 'site',
+      slug: offer.slug,
+      title: offer.title,
+      bank_name: bankName,
+      product_type: offer.spec || offer.catalogLabel || '',
+      rate_label: offer.rate || '',
+      amount_label: offer.sum || '',
+      term_label: offer.term || '',
+      logo_url: asUrl(offer.image),
+      link: offer.link || '',
+      partner_url: offer.link || '',
+      advantages: [offer.benefit1, offer.benefit2, offer.benefit3].filter(Boolean),
+      active: true,
+      featured: false,
+      status: 'published',
+      sort_order: 0,
+    };
+  }
+  return getSiteProducts(sectionKey).find((item) => item.slug === slug) || null;
+};
+
+export const mergeProductItems = (cmsItems = [], siteItems = []) => {
+  const bySlug = new Map();
+  siteItems.forEach((item) => bySlug.set(item.slug, item));
+  cmsItems.forEach((item) => {
+    const site = bySlug.get(item.slug);
+    bySlug.set(item.slug, {
+      ...(site || {}),
+      ...item,
+      source: 'cms',
+      bank_name: item.bank_name || site?.bank_name || '',
+      logo_url:
+        item.logo_url ||
+        site?.logo_url ||
+        resolveProductImage({ slug: item.slug, link: item.link || item.partner_url }),
+      rate_label: item.rate_label || site?.rate_label || '',
+      amount_label: item.amount_label || site?.amount_label || '',
+      term_label: item.term_label || site?.term_label || '',
+    });
+  });
+  return Array.from(bySlug.values());
 };
 
 export const getSiteBanks = () => {
+  const financialPaths = ['/loans', '/consumer-loans', '/collateral-loans', '/cards', '/auto-loans'];
   const map = new Map();
-  ALL_OFFERS.forEach((offer) => {
+  ALL_OFFERS.filter((offer) => financialPaths.includes(offer.catalogPath)).forEach((offer) => {
     const name = String(offer.bank || offer.title || '').split(' - ')[0].split(' — ')[0].trim();
     if (!name) return;
     const slug = slugify(name);
@@ -625,6 +678,25 @@ export const getSiteBanks = () => {
     map.get(slug).products_count += 1;
   });
   return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+};
+
+export const mergeBankItems = (cmsItems = [], siteItems = []) => {
+  const bySlug = new Map();
+  siteItems.forEach((item) => bySlug.set(item.slug, item));
+  cmsItems.forEach((item) => {
+    const site = bySlug.get(item.slug);
+    bySlug.set(item.slug, {
+      ...(site || {}),
+      ...item,
+      source: 'cms',
+      logo_url:
+        item.logo_url ||
+        site?.logo_url ||
+        resolveProductImage({ slug: item.slug, link: item.website_url }),
+      products_count: item.products_count ?? site?.products_count ?? 0,
+    });
+  });
+  return Array.from(bySlug.values()).sort((a, b) => a.name.localeCompare(b.name, 'ru'));
 };
 
 export const toCmsPayloadFromSite = (item) => ({

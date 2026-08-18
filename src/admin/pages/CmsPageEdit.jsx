@@ -192,20 +192,19 @@ const CmsPageEdit = () => {
   if (loading) return <CmsLoading />;
 
   return (
-    <div className="cms-dash">
-      <section className="cms-panel">
+    <div className="cms-editor">
+      <div className="cms-editor__main">
         <div className="cms-toolbar">
           <div className="cms-toolbar__left">
-            <StatusBadge status={form.status} />
             <strong>{isNew ? 'Новая страница' : form.title || 'Страница'}</strong>
             {isSite ? <span className="cms-muted">с сайта · {blocks.length} блоков</span> : null}
           </div>
           <div className="cms-toolbar__right">
             <button type="button" className="admin-btn admin-btn--ghost" onClick={() => setPreviewOpen(true)}>
-              Preview
+              Предпросмотр
             </button>
-            <button type="button" className="admin-btn admin-btn--ghost" onClick={savePage} disabled={saving}>
-              {isSite ? 'Сохранить в CMS' : 'Draft / Сохранить'}
+            <button type="button" className="admin-btn admin-btn--secondary" onClick={savePage} disabled={saving}>
+              {isSite ? 'Сохранить в CMS' : 'Сохранить'}
             </button>
             {!isNew && !isSite && form.status !== 'published' ? (
               <button
@@ -213,7 +212,7 @@ const CmsPageEdit = () => {
                 className="admin-btn admin-btn--primary"
                 onClick={() => cmsPublish('pages', id).then(load)}
               >
-                Publish
+                Опубликовать
               </button>
             ) : null}
             {!isNew && !isSite && form.status === 'published' ? (
@@ -225,11 +224,6 @@ const CmsPageEdit = () => {
                 Снять с публикации
               </button>
             ) : null}
-            {!isNew && !isSite ? (
-              <button type="button" className="admin-btn admin-btn--ghost" onClick={() => setDeleteOpen(true)}>
-                Удалить
-              </button>
-            ) : null}
           </div>
         </div>
 
@@ -237,49 +231,32 @@ const CmsPageEdit = () => {
         <CmsAlert type="ok">{message}</CmsAlert>
 
         <div className="cms-form">
-          <div className="cms-form__grid">
-            <label className="cms-field">
-              <span>Название</span>
-              <input
-                value={form.title}
-                onChange={(e) => {
-                  const title = e.target.value;
-                  setForm((prev) => ({
-                    ...prev,
-                    title,
-                    slug: prev.slug ? prev.slug : slugify(title),
-                  }));
-                }}
-              />
-            </label>
-            <label className="cms-field">
-              <span>Slug</span>
-              <input value={form.slug} onChange={(e) => patch('slug', slugify(e.target.value))} />
-            </label>
+          <div className="cms-form-section">
+            <h3 className="cms-form-section__title">Основной контент</h3>
+            <div className="cms-form__grid">
+              <label className="cms-field">
+                <span>Название</span>
+                <input
+                  value={form.title}
+                  onChange={(e) => {
+                    const title = e.target.value;
+                    setForm((prev) => ({
+                      ...prev,
+                      title,
+                      slug: prev.slug ? prev.slug : slugify(title),
+                    }));
+                  }}
+                />
+              </label>
+              <label className="cms-field">
+                <span>Slug</span>
+                <input value={form.slug} onChange={(e) => patch('slug', slugify(e.target.value))} />
+              </label>
+            </div>
           </div>
-          <div className="cms-form__grid">
-            <label className="cms-field">
-              <span>SEO title</span>
-              <input value={form.meta_title} onChange={(e) => patch('meta_title', e.target.value)} />
-            </label>
-            <label className="cms-field">
-              <span>Порядок</span>
-              <input
-                type="number"
-                value={form.sort_order}
-                onChange={(e) => patch('sort_order', Number(e.target.value) || 0)}
-              />
-            </label>
-          </div>
-          <label className="cms-field">
-            <span>SEO description</span>
-            <textarea value={form.meta_description} onChange={(e) => patch('meta_description', e.target.value)} />
-          </label>
         </div>
-      </section>
 
-      <section className="cms-panel">
-        <div className="cms-toolbar">
+        <div className="cms-toolbar" style={{ marginTop: 28 }}>
           <div className="cms-toolbar__left">
             <strong>Блоки страницы</strong>
             <span className="cms-muted">{blocks.length}</span>
@@ -344,7 +321,45 @@ const CmsPageEdit = () => {
             onSaveBlock={saveBlock}
           />
         )}
-      </section>
+      </div>
+
+      <aside className="cms-editor__side">
+        <div className="cms-form-section">
+          <h3 className="cms-form-section__title">Публикация</h3>
+          <div className="cms-form">
+            <label className="cms-field">
+              <span>Статус</span>
+              <div><StatusBadge status={form.status} /></div>
+            </label>
+            <label className="cms-field">
+              <span>Порядок</span>
+              <input
+                type="number"
+                value={form.sort_order}
+                onChange={(e) => patch('sort_order', Number(e.target.value) || 0)}
+              />
+            </label>
+            {!isNew && !isSite ? (
+              <button type="button" className="admin-btn admin-btn--danger" onClick={() => setDeleteOpen(true)}>
+                Удалить страницу
+              </button>
+            ) : null}
+          </div>
+        </div>
+        <div className="cms-form-section">
+          <h3 className="cms-form-section__title">SEO</h3>
+          <div className="cms-form">
+            <label className="cms-field">
+              <span>SEO title</span>
+              <input value={form.meta_title} onChange={(e) => patch('meta_title', e.target.value)} />
+            </label>
+            <label className="cms-field">
+              <span>SEO description</span>
+              <textarea value={form.meta_description} onChange={(e) => patch('meta_description', e.target.value)} />
+            </label>
+          </div>
+        </div>
+      </aside>
 
       <PreviewModal open={previewOpen} title={form.title || 'Preview'} onClose={() => setPreviewOpen(false)}>
         <p style={{ color: '#6b7689' }}>{form.meta_description}</p>
