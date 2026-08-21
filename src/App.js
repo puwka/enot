@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Loans from './pages/Loans';
@@ -55,6 +56,16 @@ import CmsCalculatorSettings from './admin/pages/CmsCalculatorSettings';
 import { MetrikaCounter } from 'react-metrika';
 import './App.css';
 
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [pathname]);
+
+  return null;
+};
+
 const PublicShell = ({ children }) => {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith('/admin');
@@ -78,6 +89,7 @@ function App() {
     <>
       <MetrikaCounter id={108751085} />
       <BrowserRouter>
+        <ScrollToTop />
         <AuthProvider>
           <AdminAuthProvider>
             <PublicShell>

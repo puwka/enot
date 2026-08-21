@@ -356,6 +356,7 @@ const Navbar = () => {
             <div
               className="site-header__more"
               ref={moreMenuRef}
+              onMouseEnter={() => setIsMoreOpen(true)}
               onMouseLeave={() => setIsMoreOpen(false)}
             >
               <button
