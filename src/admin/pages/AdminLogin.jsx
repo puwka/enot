@@ -25,7 +25,7 @@ const AdminLogin = () => {
       navigate(location.state?.from || '/admin', { replace: true });
     } catch (err) {
       if (err?.code === 'ADMIN_CONFIG_MISSING') {
-        setError('Не заданы REACT_APP_SUPABASE_URL и REACT_APP_SUPABASE_ANON_KEY.');
+        setError('API сервер недоступен. Проверьте настройки и перезапустите backend.');
       } else {
         setError('Неверный email или пароль.');
       }

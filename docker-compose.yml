@@ -1,0 +1,41 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: enotmani-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DATABASE_NAME:-enotmani}
+      POSTGRES_USER: ${DATABASE_USER:-enotmani}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-change_me}
+    ports:
+      - "${DATABASE_PORT:-5432}:5432"
+    volumes:
+      - enotmani_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER:-enotmani} -d ${DATABASE_NAME:-enotmani}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    container_name: enotmani-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_NAME: ${DATABASE_NAME:-enotmani}
+      DATABASE_USER: ${DATABASE_USER:-enotmani}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-change_me}
+      DATABASE_SSL: "false"
+      CORS_ORIGIN: "*"
+    ports:
+      - "${APP_PORT:-3001}:3001"
+
+volumes:
+  enotmani_pg_data:

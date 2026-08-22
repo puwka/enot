@@ -1,0 +1,29 @@
+stages:
+  - deploy
+
+variables:
+  APP_DIR: /var/www/enotmani
+  NODE_ENV: production
+
+deploy_production:
+  stage: deploy
+  tags:
+    - enotmani
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+  script:
+    - rsync -a --delete
+      --exclude node_modules
+      --exclude .env
+      --exclude build
+      --exclude .git
+      "$CI_PROJECT_DIR/"
+      "$APP_DIR/"
+    - cd "$APP_DIR"
+    - npm ci
+    - export REACT_APP_API_URL=/api
+    - npm run build
+    - npm run db:migrate
+    - sudo systemctl restart enotmani
+  environment:
+    name: production

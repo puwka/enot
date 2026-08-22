@@ -1,0 +1,17 @@
+[Unit]
+Description=EnotMani web application
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/enotmani
+Environment=NODE_ENV=production
+EnvironmentFile=/var/www/enotmani/.env
+ExecStart=/usr/bin/node server/index.js
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

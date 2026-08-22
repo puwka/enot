@@ -28,7 +28,7 @@ const CmsCategoriesList = () => {
       setItems(data?.items || []);
     } catch (err) {
       if (err?.code === 'CMS_NOT_INSTALLED') {
-        setError('CMS ещё не подключена. Выполните supabase/sql/bootstrap_cms_crud.sql');
+        setError('CMS ещё не подключена. Выполните npm run db:migrate');
       } else {
         setError('Не удалось загрузить категории.');
       }

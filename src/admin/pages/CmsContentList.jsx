@@ -57,7 +57,7 @@ const CmsContentList = ({ entity, title, createPath, editPath }) => {
     } catch (err) {
       setError(
         err?.code === 'CMS_NOT_INSTALLED'
-          ? 'Сначала выполните supabase/sql/bootstrap_cms_crud.sql'
+          ? 'Сначала выполните npm run db:migrate'
           : 'Не удалось импортировать в CMS.'
       );
     } finally {

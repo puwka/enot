@@ -1,47 +1,33 @@
 import { getAdminToken } from '../adminApi';
-import { isSupabaseConfigured, supabase } from '../../lib/supabaseClient';
-
-const requireClient = () => {
-  if (!isSupabaseConfigured || !supabase) {
-    const error = new Error('ADMIN_CONFIG_MISSING');
-    error.code = 'ADMIN_CONFIG_MISSING';
-    throw error;
-  }
-  return supabase;
-};
+import { apiFetch } from '../../lib/apiClient';
 
 const asCmsError = (error) => {
   const message = error?.message || 'REQUEST_FAILED';
   const next = new Error(message);
-  if (/INVALID_SESSION/i.test(message)) next.code = 'INVALID_SESSION';
-  else if (/FORBIDDEN|Недостаточно/i.test(message)) next.code = 'FORBIDDEN';
-  else if (/SLUG_EXISTS/i.test(message)) next.code = 'SLUG_EXISTS';
-  else if (/Could not find the function|PGRST202|404/i.test(message) || error?.code === 'PGRST202') {
-    next.code = 'CMS_NOT_INSTALLED';
-  } else next.code = 'REQUEST_FAILED';
+  if (/INVALID_SESSION/i.test(message) || error?.code === 'INVALID_SESSION') next.code = 'INVALID_SESSION';
+  else if (/FORBIDDEN|Недостаточно/i.test(message) || error?.code === 'FORBIDDEN') next.code = 'FORBIDDEN';
+  else if (/SLUG_EXISTS/i.test(message) || error?.code === 'SLUG_EXISTS') next.code = 'SLUG_EXISTS';
+  else if (/CMS_NOT_INSTALLED/i.test(message) || error?.code === 'CMS_NOT_INSTALLED') next.code = 'CMS_NOT_INSTALLED';
+  else next.code = 'REQUEST_FAILED';
   return next;
 };
 
 export const cmsRequest = async (action, entity, { id = null, data = {} } = {}) => {
-  const client = requireClient();
   const token = getAdminToken();
   if (!token) {
     const error = new Error('INVALID_SESSION');
     error.code = 'INVALID_SESSION';
     throw error;
   }
-  const rpcName = ['products', 'banks', 'calculator_configs'].includes(String(entity || '').toLowerCase())
-    ? 'admin_products_cms'
-    : 'admin_cms';
-  const { data: payload, error } = await client.rpc(rpcName, {
-    p_token: token,
-    p_action: action,
-    p_entity: entity,
-    p_id: id,
-    p_data: data,
-  });
-  if (error) throw asCmsError(error);
-  return payload;
+  try {
+    return await apiFetch('/admin/cms', {
+      method: 'POST',
+      adminToken: token,
+      body: { action, entity, id, data },
+    });
+  } catch (error) {
+    throw asCmsError(error);
+  }
 };
 
 export const cmsList = (entity, data = {}) => cmsRequest('list', entity, { data });

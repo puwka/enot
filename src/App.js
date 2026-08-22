@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Loans from './pages/Loans';
@@ -54,6 +54,8 @@ import CmsBanksList from './admin/pages/CmsBanksList';
 import CmsCategoriesList from './admin/pages/CmsCategoriesList';
 import CmsCalculatorSettings from './admin/pages/CmsCalculatorSettings';
 import { MetrikaCounter } from 'react-metrika';
+import PwaShell from './components/pwa/PwaShell';
+import * as serviceWorkerRegistration from './pwa/serviceWorkerRegistration';
 import './App.css';
 
 const ScrollToTop = () => {
@@ -85,9 +87,18 @@ const adminPage = (permission, sectionKey) => (
 );
 
 function App() {
+  const [updateAvailable, setUpdateAvailable] = useState(false);
+
+  useEffect(() => {
+    serviceWorkerRegistration.register({
+      onUpdate: () => setUpdateAvailable(true),
+    });
+  }, []);
+
   return (
     <>
       <MetrikaCounter id={108751085} />
+      <PwaShell updateRegistration={updateAvailable} />
       <BrowserRouter>
         <ScrollToTop />
         <AuthProvider>

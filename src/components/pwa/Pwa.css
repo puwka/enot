@@ -1,0 +1,111 @@
+.pwa-banner {
+  position: fixed;
+  left: 50%;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: min(calc(100% - 24px), 520px);
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(11, 23, 57, 0.96);
+  color: #fff;
+  box-shadow: 0 16px 40px rgba(7, 18, 43, 0.35);
+  transform: translateX(-50%);
+  animation: pwa-banner-in 0.22s ease both;
+}
+
+.pwa-banner--top {
+  top: calc(12px + env(safe-area-inset-top));
+  bottom: auto;
+}
+
+.pwa-banner__text {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.pwa-banner__text strong {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+.pwa-banner__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.pwa-banner__btn {
+  appearance: none;
+  border: 0;
+  border-radius: 10px;
+  padding: 9px 12px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.pwa-banner__btn--primary {
+  background: #12b5a2;
+  color: #fff;
+}
+
+.pwa-banner__btn--ghost {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.pwa-status {
+  position: fixed;
+  top: calc(12px + env(safe-area-inset-top));
+  left: 50%;
+  z-index: 1300;
+  transform: translateX(-50%);
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  pointer-events: none;
+  animation: pwa-banner-in 0.18s ease both;
+}
+
+.pwa-status--offline {
+  background: rgba(226, 85, 85, 0.95);
+  color: #fff;
+}
+
+.pwa-status--online {
+  background: rgba(18, 181, 162, 0.95);
+  color: #fff;
+}
+
+@keyframes pwa-banner-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@media (max-width: 480px) {
+  .pwa-banner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pwa-banner__actions {
+    justify-content: flex-end;
+  }
+}

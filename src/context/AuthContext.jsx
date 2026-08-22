@@ -1,16 +1,15 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { isSupabaseConfigured } from '../lib/supabaseClient';
 import {
-  claimSupabaseBonus,
+  claimApiBonus,
   getCurrentSessionUser,
-  loginWithSupabase,
-  logoutFromSupabase,
-  recoverSupabasePassword,
-  registerWithSupabase,
-  removeSupabaseAccount,
+  loginWithApi,
+  logoutFromApi,
+  recoverApiPassword,
+  registerWithApi,
+  removeApiAccount,
   subscribeAuthSession,
-  updateSupabasePassword,
-  updateSupabaseProfile,
+  updateApiPassword,
+  updateApiProfile,
 } from '../services/userAuth';
 
 const AuthContext = createContext(null);
@@ -20,11 +19,6 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
-    if (!isSupabaseConfigured) {
-      setUser(null);
-      setLoading(false);
-      return null;
-    }
     try {
       const next = await getCurrentSessionUser();
       setUser(next);
@@ -46,43 +40,43 @@ export const AuthProvider = ({ children }) => {
   }, [refresh]);
 
   const login = useCallback(async (loginValue, password) => {
-    const next = await loginWithSupabase(loginValue, password);
+    const next = await loginWithApi(loginValue, password);
     setUser(next);
     return next;
   }, []);
 
   const register = useCallback(async (payload) => {
-    const next = await registerWithSupabase(payload);
+    const next = await registerWithApi(payload);
     setUser(next);
     return next;
   }, []);
 
   const logout = useCallback(async () => {
-    await logoutFromSupabase();
+    await logoutFromApi();
     setUser(null);
   }, []);
 
   const saveProfile = useCallback(async (patch) => {
-    const next = await updateSupabaseProfile(patch);
+    const next = await updateApiProfile(patch);
     setUser(next);
     return next;
   }, []);
 
   const updatePassword = useCallback(async (currentPassword, nextPassword) => {
-    await updateSupabasePassword(currentPassword, nextPassword);
-  }, []);
+    await updateApiPassword(currentPassword, nextPassword, user?.email);
+  }, [user?.email]);
 
   const recoverPassword = useCallback(async (email) => {
-    await recoverSupabasePassword(email);
+    await recoverApiPassword(email);
   }, []);
 
   const removeAccount = useCallback(async () => {
-    await removeSupabaseAccount();
+    await removeApiAccount();
     setUser(null);
   }, []);
 
   const claimBonus = useCallback(async (action) => {
-    const result = await claimSupabaseBonus(action);
+    const result = await claimApiBonus(action);
     if (result.user) setUser(result.user);
     return result;
   }, []);

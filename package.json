@@ -5,11 +5,14 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
-    "@supabase/supabase-js": "^2.112.3",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^13.5.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "pg": "^8.23.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-metrika": "^1.0.0",
@@ -21,9 +24,19 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "server": "node server/index.js",
+    "dev": "npm run server",
     "build": "react-scripts build",
+    "start:prod": "npm run build && node server/index.js",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "db:migrate": "node scripts/db.mjs migrate",
+    "db:seed": "node scripts/db.mjs seed",
+    "db:check": "node scripts/db.mjs check",
+    "pwa:icons": "node scripts/generate-pwa-icons.mjs"
+  },
+  "devDependencies": {
+    "sharp": "^0.33.5"
   },
   "eslintConfig": {
     "extends": [

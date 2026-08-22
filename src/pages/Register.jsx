@@ -53,8 +53,8 @@ const Register = () => {
         setError('Этот email уже зарегистрирован.');
       } else if (err?.code === 'EMAIL_CONFIRM_REQUIRED') {
         setConfirmModalOpen(true);
-      } else if (err?.code === 'SUPABASE_NOT_CONFIGURED') {
-        setError('Supabase не настроен. Проверьте .env.');
+      } else if (err?.code === 'REQUEST_FAILED') {
+        setError('Сервер недоступен. Проверьте, что backend запущен.');
       } else {
         setError(err?.message || 'Не удалось создать аккаунт.');
       }
