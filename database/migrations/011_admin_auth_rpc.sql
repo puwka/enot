@@ -159,11 +159,6 @@ BEGIN
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION public.admin_login(text, text) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION public.admin_logout(text) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION public.admin_session(text) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION public.admin_authorize(text, text) TO anon, authenticated;
-
 UPDATE public.admin_users
 SET
   password_hash = crypt('SuperAdmin123!', gen_salt('bf')),

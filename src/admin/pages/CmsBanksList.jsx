@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { cmsCreate, cmsDelete, cmsList, cmsUpdate } from '../cms/cmsApi';
 import { slugify } from '../cms/cmsConstants';
+import CmsImageUpload from '../cms/CmsImageUpload';
 import { getSiteBanks, mergeBankItems } from '../cms/siteContent';
 import { CmsAlert, CmsLoading, ConfirmDialog, StatusBadge } from '../cms/CmsUi';
 import '../cms/Cms.css';
@@ -114,10 +115,11 @@ const CmsBanksList = () => {
           </label>
         </div>
         <div className="cms-form__grid">
-          <label className="cms-field">
-            <span>Логотип</span>
-            <input value={form.logo_url} onChange={(e) => setForm((prev) => ({ ...prev, logo_url: e.target.value }))} />
-          </label>
+          <CmsImageUpload
+            label="Логотип"
+            value={form.logo_url}
+            onChange={(url) => setForm((prev) => ({ ...prev, logo_url: url }))}
+          />
           <label className="cms-field">
             <span>Сайт</span>
             <input value={form.website_url} onChange={(e) => setForm((prev) => ({ ...prev, website_url: e.target.value }))} />

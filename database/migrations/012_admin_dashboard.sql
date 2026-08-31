@@ -273,5 +273,3 @@ BEGIN
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION public.admin_dashboard(text) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION public.admin_login(text, text) TO anon, authenticated;

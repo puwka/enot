@@ -935,5 +935,3 @@ BEGIN
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION public.admin_cms_require(text, text) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION public.admin_cms(text, text, text, uuid, jsonb) TO anon, authenticated;

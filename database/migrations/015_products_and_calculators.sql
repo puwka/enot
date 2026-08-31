@@ -53,19 +53,7 @@ BEFORE UPDATE ON public.calculator_configs
 FOR EACH ROW
 EXECUTE FUNCTION public.set_updated_at();
 
-ALTER TABLE public.calculator_configs ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS calculator_configs_select_published ON public.calculator_configs;
-CREATE POLICY calculator_configs_select_published
-ON public.calculator_configs
-FOR SELECT
-TO anon, authenticated
-USING (deleted_at IS NULL AND status = 'published');
-
-DROP POLICY IF EXISTS calculator_configs_admin_all ON public.calculator_configs;
-
-REVOKE INSERT, UPDATE, DELETE ON TABLE public.calculator_configs FROM anon, authenticated;
-GRANT SELECT ON TABLE public.calculator_configs TO anon, authenticated;
+ALTER TABLE public.calculator_configs DISABLE ROW LEVEL SECURITY;
 
 INSERT INTO public.calculator_configs (
   key, title, min_amount, max_amount, min_term, max_term, rate, default_amount, default_term, default_purpose, purposes, status, sort_order
@@ -382,4 +370,3 @@ BEGIN
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION public.admin_products_cms(text, text, text, uuid, jsonb) TO anon, authenticated;

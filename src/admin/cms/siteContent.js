@@ -26,20 +26,30 @@ export const PRODUCT_SECTIONS = {
   obuchenie: {
     key: 'obuchenie',
     title: 'Обучение',
+    categorySlug: 'obuchenie',
     listPath: '/admin/products/obuchenie',
-    paths: ['/obuchenie'],
+    paths: ['/obuchenie', '/Education'],
   },
   services: {
     key: 'services',
     title: 'Сервисы',
+    categorySlug: 'services',
     listPath: '/admin/products/services',
     paths: ['/services'],
   },
   shops: {
     key: 'shops',
     title: 'Магазины',
+    categorySlug: 'shops',
     listPath: '/admin/products/shops',
     paths: ['/shops'],
+  },
+  jobs: {
+    key: 'jobs',
+    title: 'Вакансии',
+    categorySlug: 'jobs',
+    listPath: '/admin/products/jobs',
+    paths: ['/Job'],
   },
 };
 

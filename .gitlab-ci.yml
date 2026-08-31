@@ -17,6 +17,7 @@ deploy_production:
       --exclude .env
       --exclude build
       --exclude .git
+      --exclude uploads
       "$CI_PROJECT_DIR/"
       "$APP_DIR/"
     - cd "$APP_DIR"

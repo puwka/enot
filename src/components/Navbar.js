@@ -422,7 +422,7 @@ const Navbar = () => {
             ) : (
               <button
                 type="button"
-                className="site-header__action site-header__action--account"
+                className="site-header__action site-header__action--account site-header__action--login"
                 title="Войти"
                 onClick={() => navigate('/login')}
               >

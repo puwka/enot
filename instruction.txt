@@ -1,0 +1,456 @@
+==================================================
+ПОЛНАЯ ИНСТРУКЦИЯ: ДЕПЛОЙ НА VPS (TIMEWEB + GITLAB)
+==================================================
+
+Сайт состоит из трёх частей:
+  - React-фронтенд (собирается в папку build/)
+  - Node.js API (server/index.js, порт 3001)
+  - PostgreSQL (база данных на этом же сервере)
+
+Схема работы:
+  Пользователь → Nginx (80/443) → Node.js (:3001) → PostgreSQL
+
+После первичной настройки достаточно:
+  git push в ветку main → GitLab Runner сам обновит сайт.
+
+
+==================================================
+ЧАСТЬ 0. ЧТО НУЖНО ПОДГОТОВИТЬ
+==================================================
+
+1) VPS в Timeweb Cloud
+   - ОС: Ubuntu 22.04 или 24.04
+   - Рекомендуемо: от 2 GB RAM, 1–2 CPU, 20+ GB SSD
+   - Запомните IP сервера и root-пароль / SSH-ключ
+
+2) Домен
+   - A-запись: ваш-домен.ru → IP сервера
+   - A-запись: www.ваш-домен.ru → IP сервера
+   - Подождите 5–30 минут, пока DNS обновится
+
+3) Репозиторий в GitLab
+   - Код проекта уже должен быть в GitLab
+   - Ветка для продакшена: main
+   - В репозитории должны быть файлы:
+       .gitlab-ci.yml
+       deploy/enotmani.service
+       deploy/nginx-enotmani.conf
+
+4) Доступ по SSH с вашего ПК:
+
+   ssh root@ВАШ_IP
+
+
+==================================================
+ЧАСТЬ 1. УСТАНОВКА ПРОГРАММ НА СЕРВЕР (ОДИН РАЗ)
+==================================================
+
+Все команды ниже выполняйте на VPS под root.
+
+1.1. Обновление системы и базовые пакеты
+
+apt update && apt upgrade -y
+apt install -y git curl nginx postgresql postgresql-contrib rsync ufw
+
+1.2. Node.js 20
+
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+apt install -y nodejs
+node -v
+npm -v
+
+Должно показать Node v20.x и npm 10.x
+
+1.3. Firewall (открыть HTTP/HTTPS/SSH)
+
+ufw allow OpenSSH
+ufw allow 80/tcp
+ufw allow 443/tcp
+ufw --force enable
+ufw status
+
+1.4. PostgreSQL — создать пользователя и базу
+
+sudo -u postgres psql
+
+Внутри psql выполните (пароль придумайте сами и сохраните):
+
+CREATE USER enotmani WITH PASSWORD 'ПРИДУМАЙТЕ_НАДЁЖНЫЙ_ПАРОЛЬ';
+CREATE DATABASE enotmani OWNER enotmani;
+GRANT ALL PRIVILEGES ON DATABASE enotmani TO enotmani;
+\q
+
+Проверка:
+
+sudo -u postgres psql -c "\l" | grep enotmani
+
+
+==================================================
+ЧАСТЬ 2. ЗАКИНУТЬ ПРОЕКТ НА СЕРВЕР
+==================================================
+
+2.1. Создать папку
+
+mkdir -p /var/www/enotmani
+cd /var/www/enotmani
+
+2.2. Клонировать из GitLab
+
+Вариант А — публичный репозиторий:
+
+git clone https://gitlab.com/ВАШ_ЛОГИН/ВАШ_РЕПО.git .
+
+Вариант Б — приватный (попросит логин/пароль или Deploy Token):
+
+git clone https://oauth2:ВАШ_TOKEN@gitlab.com/ВАШ_ЛОГИН/ВАШ_РЕПО.git .
+
+Как сделать Deploy Token:
+  GitLab → проект → Settings → Repository → Deploy tokens
+  Scope: read_repository
+  Скопируйте username + token и подставьте в URL выше.
+
+2.3. Проверить, что файлы на месте
+
+ls -la
+# должны быть: package.json, server/, src/, database/, deploy/, .gitlab-ci.yml
+
+2.4. Права на папку (пока для первой установки)
+
+chown -R www-data:www-data /var/www/enotmani
+
+
+==================================================
+ЧАСТЬ 3. НАСТРОИТЬ .env (СЕКРЕТЫ ТОЛЬКО НА СЕРВЕРЕ)
+==================================================
+
+Создайте файл:
+
+nano /var/www/enotmani/.env
+
+Вставьте (подставьте свой пароль БД):
+
+APP_ENV=production
+NODE_ENV=production
+PORT=3001
+
+DATABASE_URL=postgresql://enotmani:ПРИДУМАЙТЕ_НАДЁЖНЫЙ_ПАРОЛЬ@localhost:5432/enotmani
+DATABASE_SSL=false
+
+REACT_APP_API_URL=/api
+CORS_ORIGIN=*
+SESSION_DAYS=7
+
+Сохраните: Ctrl+O → Enter → Ctrl+X
+
+Права:
+
+chown www-data:www-data /var/www/enotmani/.env
+chmod 600 /var/www/enotmani/.env
+
+ВАЖНО:
+  - .env НЕ коммитить в GitLab
+  - пароль БД только на сервере
+
+
+==================================================
+ЧАСТЬ 4. ПЕРВАЯ УСТАНОВКА: ЗАВИСИМОСТИ, БД, СБОРКА
+==================================================
+
+cd /var/www/enotmani
+
+# Зависимости
+sudo -u www-data npm ci
+
+# Миграции базы (создаст таблицы)
+sudo -u www-data npm run db:migrate
+
+# Проверка подключения к БД
+sudo -u www-data npm run db:check
+
+# Сборка фронтенда
+sudo -u www-data env REACT_APP_API_URL=/api npm run build
+
+Если db:migrate или db:check упали — проверьте DATABASE_URL в .env.
+
+
+==================================================
+ЧАСТЬ 5. СОЗДАТЬ АДМИНИСТРАТОРА
+==================================================
+
+Откройте файл:
+
+nano /var/www/enotmani/database/grant_superadmin.sql
+
+Замените:
+  YOUR_EMAIL@example.com  → ваш email
+  YOUR_SECURE_PASSWORD    → ваш пароль админки
+
+Сохраните и выполните:
+
+cd /var/www/enotmani
+export $(grep -v '^#' .env | xargs)
+psql "$DATABASE_URL" -f database/grant_superadmin.sql
+
+Админка будет доступна по адресу:
+  https://ваш-домен.ru/admin/login
+
+
+==================================================
+ЧАСТЬ 6. ЗАПУСК ПРИЛОЖЕНИЯ (SYSTEMD)
+==================================================
+
+6.1. Установить unit-файл
+
+cp /var/www/enotmani/deploy/enotmani.service /etc/systemd/system/enotmani.service
+systemctl daemon-reload
+systemctl enable enotmani
+systemctl start enotmani
+systemctl status enotmani
+
+Должно быть: active (running)
+Выход из status: q
+
+6.2. Проверить API локально
+
+curl http://127.0.0.1:3001/api/health
+
+Если не отвечает:
+
+journalctl -u enotmani -n 80 --no-pager
+
+
+==================================================
+ЧАСТЬ 7. NGINX (ДОМЕН → ПРИЛОЖЕНИЕ)
+==================================================
+
+7.1. Скопировать конфиг
+
+cp /var/www/enotmani/deploy/nginx-enotmani.conf /etc/nginx/sites-available/enotmani
+
+7.2. Подставить домен
+
+nano /etc/nginx/sites-available/enotmani
+
+Замените YOUR_DOMAIN.ru на ваш домен в обеих строках server_name.
+Пример:
+
+server_name enotmani.ru www.enotmani.ru;
+
+7.3. Включить сайт
+
+ln -sf /etc/nginx/sites-available/enotmani /etc/nginx/sites-enabled/enotmani
+rm -f /etc/nginx/sites-enabled/default
+nginx -t
+systemctl reload nginx
+
+7.4. Проверка по HTTP
+
+Откройте в браузере: http://ваш-домен.ru
+Или: curl -I http://127.0.0.1
+
+
+==================================================
+ЧАСТЬ 8. HTTPS (SSL)
+==================================================
+
+apt install -y certbot python3-certbot-nginx
+certbot --nginx -d ваш-домен.ru -d www.ваш-домен.ru
+
+Следуйте подсказкам (email, согласие).
+Certbot сам настроит HTTPS и автообновление сертификата.
+
+Проверка:
+
+https://ваш-домен.ru
+https://ваш-домен.ru/admin/login
+
+
+==================================================
+ЧАСТЬ 9. GITLAB RUNNER — АВТОДЕПЛОЙ ПРИ PUSH
+==================================================
+
+Это нужно, чтобы после git push сайт обновлялся сам.
+
+9.1. Установить Runner на VPS
+
+curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.deb.sh | bash
+apt install -y gitlab-runner
+
+9.2. Создать runner в GitLab
+
+GitLab → ваш проект → Settings → CI/CD → Runners
+→ New project runner
+
+Запомните / скопируйте registration token.
+
+9.3. Зарегистрировать на сервере
+
+gitlab-runner register
+
+Ответы:
+  GitLab instance URL: https://gitlab.com/
+  Token:               (из шага 9.2)
+  Description:         enotmani-vps
+  Tags:                enotmani
+  Executor:            shell
+
+Проверка:
+
+gitlab-runner list
+gitlab-runner status
+
+В GitLab runner должен быть зелёным / online.
+
+9.4. Права для деплоя
+
+usermod -aG www-data gitlab-runner
+echo 'gitlab-runner ALL=(ALL) NOPASSWD: /bin/systemctl restart enotmani' | tee /etc/sudoers.d/gitlab-runner-enotmani
+chmod 440 /etc/sudoers.d/gitlab-runner-enotmani
+
+chown -R gitlab-runner:www-data /var/www/enotmani
+chmod -R g+w /var/www/enotmani
+
+# .env должен остаться защищённым
+chown www-data:www-data /var/www/enotmani/.env
+chmod 600 /var/www/enotmani/.env
+# но gitlab-runner должен уметь читать его для миграций:
+setfacl -m u:gitlab-runner:r /var/www/enotmani/.env 2>/dev/null || chmod 640 /var/www/enotmani/.env
+
+9.5. Как работает .gitlab-ci.yml
+
+При push в ветку main Runner:
+  1) скачивает код во временную папку
+  2) копирует в /var/www/enotmani (файл .env НЕ перезаписывается)
+  3) npm ci
+  4) npm run build
+  5) npm run db:migrate
+  6) systemctl restart enotmani
+
+DATABASE_URL храните только в .env на сервере, не в GitLab Variables.
+
+
+==================================================
+ЧАСТЬ 10. КАК ОБНОВЛЯТЬ САЙТ ПОСЛЕ НАСТРОЙКИ
+==================================================
+
+С компьютера разработчика:
+
+git add .
+git commit -m "описание изменений"
+git push origin main
+
+Далее:
+  GitLab → CI/CD → Pipelines → смотрите зелёный pipeline
+  Через 2–5 минут сайт обновлён
+
+Ручной деплой без GitLab (если нужно):
+
+cd /var/www/enotmani
+sudo -u gitlab-runner git pull   # или rsync с вашего ПК
+cd /var/www/enotmani
+npm ci
+REACT_APP_API_URL=/api npm run build
+npm run db:migrate
+systemctl restart enotmani
+
+
+==================================================
+ЧАСТЬ 11. ПРОВЕРОЧНЫЙ ЧЕКЛИСТ
+==================================================
+
+- [ ] http(s)://ваш-домен.ru открывается
+- [ ] /loans и /cards работают
+- [ ] Регистрация и вход пользователя
+- [ ] /account открывается после входа
+- [ ] /admin/login — вход админа
+- [ ] HTTPS — замок в браузере
+- [ ] curl http://127.0.0.1:3001/api/health — отвечает OK
+- [ ] systemctl status enotmani — active (running)
+- [ ] Push в main запускает pipeline и обновляет сайт
+- [ ] /manifest.json и /sw.js открываются (PWA)
+
+
+==================================================
+ЧАСТЬ 12. ЕСЛИ ЧТО-ТО НЕ РАБОТАЕТ
+==================================================
+
+Сайт не открывается:
+  systemctl status enotmani
+  systemctl status nginx
+  curl -v http://127.0.0.1:3001/api/health
+  journalctl -u enotmani -n 100 --no-pager
+  tail -n 50 /var/log/nginx/error.log
+
+База не подключается:
+  cat /var/www/enotmani/.env | grep DATABASE
+  cd /var/www/enotmani && npm run db:check
+  sudo systemctl status postgresql
+
+Pipeline падает:
+  GitLab → CI/CD → Pipelines → failed job → лог
+  Частые причины: нет tag enotmani у runner, нет прав на /var/www/enotmani, нет rsync
+
+Админка не входит:
+  проверьте grant_superadmin.sql
+  повторно выполните psql "$DATABASE_URL" -f database/grant_superadmin.sql
+
+Белый экран:
+  ls -la /var/www/enotmani/build
+  journalctl -u enotmani -n 50 --no-pager
+  пересоберите: REACT_APP_API_URL=/api npm run build && systemctl restart enotmani
+
+После смены .env:
+  systemctl restart enotmani
+  (если меняли REACT_APP_* — нужен новый npm run build)
+
+
+==================================================
+ЧАСТЬ 13. BACKUP БАЗЫ (РЕКОМЕНДУЕТСЯ)
+==================================================
+
+mkdir -p /backup
+
+Раз в день вручную или через cron:
+
+pg_dump "postgresql://enotmani:ПАРОЛЬ@localhost:5432/enotmani" -Fc -f /backup/enotmani_$(date +%F).dump
+
+Cron (каждый день в 3:00):
+
+crontab -e
+
+Добавить строку:
+
+0 3 * * * pg_dump "postgresql://enotmani:ПАРОЛЬ@localhost:5432/enotmani" -Fc -f /backup/enotmani_$(date +\%F).dump
+
+Восстановление:
+
+pg_restore -d "postgresql://enotmani:ПАРОЛЬ@localhost:5432/enotmani" --clean --if-exists /backup/enotmani_ДАТА.dump
+
+
+==================================================
+ЧАСТЬ 14. КРАТКАЯ СХЕМА
+==================================================
+
+ОДИН РАЗ:
+  1. VPS + Node 20 + Nginx + PostgreSQL
+  2. git clone → /var/www/enotmani
+  3. .env на сервере
+  4. npm ci → db:migrate → build
+  5. админ (grant_superadmin.sql)
+  6. systemd enotmani
+  7. nginx + certbot
+  8. GitLab Runner (tag: enotmani)
+
+ПОТОМ ВСЕГДА:
+  git push origin main → сайт обновился сам
+
+
+Полезные команды:
+
+  systemctl status enotmani
+  systemctl restart enotmani
+  journalctl -u enotmani -f
+  nginx -t && systemctl reload nginx
+  cd /var/www/enotmani && npm run db:check
+
+==================================================

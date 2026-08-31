@@ -12,6 +12,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^4.21.2",
+    "multer": "^1.4.5-lts.2",
     "pg": "^8.23.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
@@ -36,7 +37,8 @@
     "pwa:icons": "node scripts/generate-pwa-icons.mjs"
   },
   "devDependencies": {
-    "sharp": "^0.33.5"
+    "sharp": "^0.33.5",
+    "yaml": "^2.9.0"
   },
   "eslintConfig": {
     "extends": [

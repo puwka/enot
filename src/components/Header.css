@@ -703,6 +703,11 @@
   .site-header__drawer.is-open {
     display: block;
   }
+
+  /* «Войти» уже есть в бургер-меню; без иконки остаётся пустая рамка */
+  .site-header__action--login {
+    display: none;
+  }
 }
 
 @media (max-width: 600px) {

@@ -19,6 +19,8 @@
 .env.production.local
 .env
 .vercel
+/uploads
+!/uploads/.gitkeep
 
 npm-debug.log*
 yarn-debug.log*

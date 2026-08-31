@@ -5,6 +5,7 @@ import { PRODUCT_SECTIONS } from '../cms/productSections';
 import { getSiteProductBySlug, getSiteBanks, mergeBankItems } from '../cms/siteContent';
 import { resolveProductImage } from '../../data/productImages';
 import { slugify } from '../cms/cmsConstants';
+import CmsImageUpload from '../cms/CmsImageUpload';
 import { CmsAlert, CmsLoading, StatusBadge } from '../cms/CmsUi';
 import '../cms/Cms.css';
 
@@ -304,17 +305,12 @@ const CmsProductEdit = ({ sectionKey }) => {
           <div className="cms-form-section">
             <h3 className="cms-form-section__title">Изображение и ссылка</h3>
             <div className="cms-form__grid">
-              <label className="cms-field">
-                <span>Логотип</span>
-                <input value={form.logo_url} onChange={(e) => setForm((prev) => ({ ...prev, logo_url: e.target.value }))} />
-                {logoPreview ? (
-                  <img
-                    src={logoPreview}
-                    alt=""
-                    style={{ marginTop: 8, width: 64, height: 64, objectFit: 'contain' }}
-                  />
-                ) : null}
-              </label>
+              <CmsImageUpload
+                label="Логотип"
+                value={form.logo_url}
+                previewFallback={logoPreview && logoPreview !== form.logo_url ? logoPreview : ''}
+                onChange={(url) => setForm((prev) => ({ ...prev, logo_url: url }))}
+              />
               <label className="cms-field">
                 <span>Ссылка</span>
                 <input value={form.link} onChange={(e) => setForm((prev) => ({ ...prev, link: e.target.value }))} />
