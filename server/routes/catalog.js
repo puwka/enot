@@ -2,7 +2,10 @@ import { Router } from 'express';
 import {
   fetchCalculatorConfig,
   fetchCatalogProducts,
+  fetchNewsBySlug,
+  fetchNewsList,
   fetchOfferBySlug,
+  fetchRelatedNews,
   fetchRelatedOffers,
   getCategoryId,
 } from '../services/catalog.js';
@@ -47,6 +50,26 @@ router.get('/category-id/:slug', async (req, res) => {
     res.json({ id });
   } catch {
     res.status(500).json({ error: 'REQUEST_FAILED' });
+  }
+});
+
+router.get('/news', async (_req, res) => {
+  try {
+    const items = await fetchNewsList();
+    res.json({ items });
+  } catch {
+    res.status(500).json({ error: 'REQUEST_FAILED', message: 'Не удалось загрузить новости.' });
+  }
+});
+
+router.get('/news/:slug', async (req, res) => {
+  try {
+    const item = await fetchNewsBySlug(req.params.slug);
+    if (!item) return res.status(404).json({ error: 'NOT_FOUND' });
+    const related = await fetchRelatedNews(item.slug, 3);
+    return res.json({ item, related });
+  } catch {
+    res.status(500).json({ error: 'REQUEST_FAILED', message: 'Не удалось загрузить новость.' });
   }
 });
 

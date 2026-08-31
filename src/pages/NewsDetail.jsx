@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
-import { getNewsBySlug, getRelatedNews } from '../data/news';
+import { getNewsBySlug, getRelatedNews, NEWS } from '../data/news';
+import { fetchNewsBySlug, fetchRelatedNews, mergeNewsItems } from '../data/newsRuntimeApi';
 import vkIcon from '../images/vkontakte.png';
 import tgIcon from '../images/telega.png';
 import maxIcon from '../images/max.png';
@@ -31,15 +32,63 @@ const SHARE_LINKS = [
 
 const NewsDetail = () => {
   const { slug } = useParams();
-  const news = getNewsBySlug(slug);
-  const related = useMemo(() => getRelatedNews(news, 3), [news]);
-  const [tocOpen, setTocOpen] = useState(false);
+  const staticNews = useMemo(() => getNewsBySlug(slug), [slug]);
+  const [news, setNews] = useState(staticNews);
+  const [related, setRelated] = useState(() => getRelatedNews(staticNews, 3));
+  const [loading, setLoading] = useState(!staticNews);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(!staticNews);
+
+    fetchNewsBySlug(slug).then(async (cmsNews) => {
+      if (!active) return;
+
+      if (cmsNews) {
+        setNews(cmsNews);
+        const cmsRelated = await fetchRelatedNews(slug, 3);
+        if (!active) return;
+        if (cmsRelated.length) {
+          setRelated(cmsRelated);
+        } else {
+          const merged = mergeNewsItems(NEWS, [cmsNews]).filter((item) => item.slug !== slug);
+          setRelated(merged.slice(0, 3));
+        }
+        setLoading(false);
+        return;
+      }
+
+      if (staticNews) {
+        setNews(staticNews);
+        setRelated(getRelatedNews(staticNews, 3));
+      }
+      setLoading(false);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [slug, staticNews]);
+
+  if (loading) {
+    return (
+      <main className="news">
+        <div className="news__container">
+          <p className="news-head__lead">Загрузка…</p>
+        </div>
+      </main>
+    );
+  }
 
   if (!news) {
     return <Navigate to="/news" replace />;
   }
 
   const pageUrl = typeof window !== 'undefined' ? window.location.href : `https://enotmani.ru/news/${news.slug}`;
+  const facts = Array.isArray(news.facts) ? news.facts : [];
+  const blocks = Array.isArray(news.blocks) ? news.blocks : [];
+  const toc = Array.isArray(news.toc) ? news.toc : [];
+  const cta = news.cta || { to: '/loans', label: 'К кредитам', text: 'Сравните предложения банков.' };
 
   return (
     <main className="news">
@@ -55,80 +104,86 @@ const NewsDetail = () => {
         <header className="news-head">
           <div className="news-head__meta">
             <span className="news-head__tag">{news.category}</span>
-            <time dateTime={news.dateISO}>{news.date}</time>
-            <span>{news.readTime} чтения</span>
+            {news.date ? <time dateTime={news.dateISO}>{news.date}</time> : null}
+            {news.readTime ? <span>{news.readTime} чтения</span> : null}
           </div>
           <h1 className="news-head__title">{news.title}</h1>
           <p className="news-head__lead">{news.lead}</p>
         </header>
 
-        <figure className="news-hero">
-          <img src={news.cover} alt="" />
-        </figure>
+        {news.cover ? (
+          <figure className="news-hero">
+            <img src={news.cover} alt="" />
+          </figure>
+        ) : null}
 
         <div className="news-layout">
           <article className="news-body">
-            {news.blocks.map((block, index) => {
-              if (block.type === 'h2') {
-                return (
-                  <h2 key={`${block.id}-${index}`} id={block.id}>
-                    {block.text}
-                  </h2>
-                );
-              }
-              if (block.type === 'h3') {
-                return <h3 key={`h3-${index}`}>{block.text}</h3>;
-              }
-              if (block.type === 'p') {
-                return <p key={`p-${index}`}>{block.text}</p>;
-              }
-              if (block.type === 'ul') {
-                return (
-                  <ul key={`ul-${index}`}>
-                    {block.items.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                );
-              }
-              if (block.type === 'ol') {
-                return (
-                  <ol key={`ol-${index}`}>
-                    {block.items.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ol>
-                );
-              }
-              if (block.type === 'quote') {
-                return (
-                  <blockquote key={`q-${index}`} className="news-quote">
-                    {block.text}
-                  </blockquote>
-                );
-              }
-              if (block.type === 'warning') {
-                return (
-                  <aside key={`w-${index}`} className="news-alert">
-                    <strong>{block.title}</strong>
-                    <p>{block.text}</p>
-                  </aside>
-                );
-              }
-              if (block.type === 'facts') {
-                return (
-                  <div key={`f-${index}`} className="news-facts">
-                    {block.items.map((item) => (
-                      <article key={item.title} className="news-facts__item">
-                        <strong>{item.title}</strong>
-                        <p>{item.text}</p>
-                      </article>
-                    ))}
-                  </div>
-                );
-              }
-              return null;
-            })}
+            {blocks.length ? (
+              blocks.map((block, index) => {
+                if (block.type === 'h2') {
+                  return (
+                    <h2 key={`${block.id || 'h2'}-${index}`} id={block.id}>
+                      {block.text}
+                    </h2>
+                  );
+                }
+                if (block.type === 'h3') {
+                  return <h3 key={`h3-${index}`}>{block.text}</h3>;
+                }
+                if (block.type === 'p') {
+                  return <p key={`p-${index}`}>{block.text}</p>;
+                }
+                if (block.type === 'ul') {
+                  return (
+                    <ul key={`ul-${index}`}>
+                      {(block.items || []).map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
+                  );
+                }
+                if (block.type === 'ol') {
+                  return (
+                    <ol key={`ol-${index}`}>
+                      {(block.items || []).map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ol>
+                  );
+                }
+                if (block.type === 'quote') {
+                  return (
+                    <blockquote key={`q-${index}`} className="news-quote">
+                      {block.text}
+                    </blockquote>
+                  );
+                }
+                if (block.type === 'warning') {
+                  return (
+                    <aside key={`w-${index}`} className="news-alert">
+                      <strong>{block.title}</strong>
+                      <p>{block.text}</p>
+                    </aside>
+                  );
+                }
+                if (block.type === 'facts') {
+                  return (
+                    <div key={`f-${index}`} className="news-facts">
+                      {(block.items || []).map((item) => (
+                        <article key={item.title} className="news-facts__item">
+                          <strong>{item.title}</strong>
+                          <p>{item.text}</p>
+                        </article>
+                      ))}
+                    </div>
+                  );
+                }
+                return null;
+              })
+            ) : (
+              <p>{news.lead}</p>
+            )}
 
             <section className="news-note">
               <h2>Важно знать</h2>
@@ -141,42 +196,25 @@ const NewsDetail = () => {
 
           <aside className="news-side">
             <div className="news-side__sticky">
-              <div className="news-toc">
-                <button
-                  type="button"
-                  className="news-toc__toggle"
-                  aria-expanded={tocOpen}
-                  onClick={() => setTocOpen((value) => !value)}
-                >
-                  Содержание
-                  <span aria-hidden="true">{tocOpen ? '−' : '+'}</span>
-                </button>
-                <div className={`news-toc__panel${tocOpen ? ' is-open' : ''}`}>
-                  <p className="news-toc__label">Содержание</p>
-                  <ol>
-                    {news.toc.map((item, index) => (
-                      <li key={item.id}>
-                        <a href={`#${item.id}`}>
-                          <span>{index + 1}.</span>
-                          {item.title}
-                        </a>
+              {toc.length ? (
+                <div className="news-toc">
+                  <NewsToc toc={toc} />
+                </div>
+              ) : null}
+
+              {facts.length ? (
+                <div className="news-side-card">
+                  <p className="news-side-card__label">Ключевые факты</p>
+                  <ul>
+                    {facts.map((item) => (
+                      <li key={item.label || item.title}>
+                        <span>{item.label || item.title}</span>
+                        <strong>{item.value || item.text}</strong>
                       </li>
                     ))}
-                  </ol>
+                  </ul>
                 </div>
-              </div>
-
-              <div className="news-side-card">
-                <p className="news-side-card__label">Ключевые факты</p>
-                <ul>
-                  {news.facts.map((item) => (
-                    <li key={item.label}>
-                      <span>{item.label}</span>
-                      <strong>{item.value}</strong>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              ) : null}
 
               <div className="news-share">
                 <p className="news-share__label">Поделиться</p>
@@ -229,8 +267,8 @@ const NewsDetail = () => {
                       <Link to={`/news/${item.slug}`}>{item.title}</Link>
                     </h3>
                     <div className="home-post__meta">
-                      <time dateTime={item.dateISO}>{item.date}</time>
-                      <span>{item.readTime}</span>
+                      {item.date ? <time dateTime={item.dateISO}>{item.date}</time> : null}
+                      {item.readTime ? <span>{item.readTime}</span> : null}
                       <Link to={`/news/${item.slug}`}>
                         Читать
                         <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
@@ -254,14 +292,45 @@ const NewsDetail = () => {
 
         <section className="news-cta">
           <div>
-            <h2>{news.cta.text}</h2>
+            <h2>{cta.text}</h2>
           </div>
-          <Link to={news.cta.to} className="btn btn--primary">
-            {news.cta.label}
+          <Link to={cta.to || '/loans'} className="btn btn--primary">
+            {cta.label || 'Подробнее'}
           </Link>
         </section>
       </div>
     </main>
+  );
+};
+
+const NewsToc = ({ toc }) => {
+  const [tocOpen, setTocOpen] = useState(false);
+
+  return (
+    <>
+      <button
+        type="button"
+        className="news-toc__toggle"
+        aria-expanded={tocOpen}
+        onClick={() => setTocOpen((value) => !value)}
+      >
+        Содержание
+        <span aria-hidden="true">{tocOpen ? '−' : '+'}</span>
+      </button>
+      <div className={`news-toc__panel${tocOpen ? ' is-open' : ''}`}>
+        <p className="news-toc__label">Содержание</p>
+        <ol>
+          {toc.map((item, index) => (
+            <li key={item.id || item.title}>
+              <a href={`#${item.id}`}>
+                <span>{index + 1}.</span>
+                {item.title}
+              </a>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </>
   );
 };
 

@@ -118,3 +118,72 @@ export const fetchCalculatorConfig = async (key = 'loan') => {
   );
   return rows[0] || null;
 };
+
+const newsSelect = `
+  SELECT
+    n.*,
+    c.title AS category_title
+  FROM public.news n
+  LEFT JOIN public.categories c ON c.id = n.category_id
+`;
+
+const mapNewsRow = (row) => ({
+  id: row.id,
+  slug: row.slug,
+  title: row.title,
+  category: row.category_title || 'Новости',
+  dateISO: row.published_at || row.created_at,
+  readTime: row.read_time || '5 мин',
+  cover: row.cover_url || '',
+  lead: row.lead || row.excerpt || '',
+  excerpt: row.excerpt || row.lead || '',
+  author: row.author || '',
+  facts: Array.isArray(row.facts) ? row.facts : [],
+  blocks: Array.isArray(row.content_blocks) ? row.content_blocks : [],
+  toc: Array.isArray(row.toc) ? row.toc : [],
+  cta:
+    row.cta && typeof row.cta === 'object' && Object.keys(row.cta).length
+      ? row.cta
+      : {
+          to: '/loans',
+          label: 'К кредитам',
+          text: 'Сравните актуальные предложения банков в каталоге ЕнотМани.',
+        },
+  publishedAt: row.published_at,
+  createdAt: row.created_at,
+});
+
+export const fetchNewsList = async () => {
+  const { rows } = await query(
+    `${newsSelect}
+     WHERE n.status = 'published'
+       AND n.deleted_at IS NULL
+     ORDER BY n.published_at DESC NULLS LAST, n.created_at DESC`
+  );
+  return rows.map(mapNewsRow);
+};
+
+export const fetchNewsBySlug = async (slug) => {
+  const { rows } = await query(
+    `${newsSelect}
+     WHERE n.slug = $1
+       AND n.status = 'published'
+       AND n.deleted_at IS NULL
+     LIMIT 1`,
+    [slug]
+  );
+  return rows[0] ? mapNewsRow(rows[0]) : null;
+};
+
+export const fetchRelatedNews = async (excludeSlug, limit = 3) => {
+  const { rows } = await query(
+    `${newsSelect}
+     WHERE n.status = 'published'
+       AND n.deleted_at IS NULL
+       AND n.slug <> $1
+     ORDER BY n.published_at DESC NULLS LAST, n.created_at DESC
+     LIMIT $2`,
+    [excludeSlug, limit]
+  );
+  return rows.map(mapNewsRow);
+};
