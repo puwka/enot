@@ -7,9 +7,21 @@ import { slugify } from './cmsConstants';
 export const PRODUCT_SECTIONS = {
   loans: {
     key: 'loans',
-    title: 'Кредиты',
+    title: 'Микрозаймы',
     listPath: '/admin/products/loans',
-    paths: ['/loans', '/consumer-loans', '/collateral-loans'],
+    paths: ['/loans'],
+  },
+  'consumer-loans': {
+    key: 'consumer-loans',
+    title: 'Потреб. кредиты',
+    listPath: '/admin/products/consumer-loans',
+    paths: ['/consumer-loans'],
+  },
+  'collateral-loans': {
+    key: 'collateral-loans',
+    title: 'Кредиты под залог',
+    listPath: '/admin/products/collateral-loans',
+    paths: ['/collateral-loans'],
   },
   'debit-cards': {
     key: 'debit-cards',
@@ -22,6 +34,12 @@ export const PRODUCT_SECTIONS = {
     title: 'Кредитные карты',
     listPath: '/admin/products/credit-cards',
     paths: ['/auto-loans'],
+  },
+  'settlement-accounts': {
+    key: 'settlement-accounts',
+    title: 'Расчётные счета',
+    listPath: '/admin/products/settlement-accounts',
+    paths: ['/settlement-accounts'],
   },
   obuchenie: {
     key: 'obuchenie',

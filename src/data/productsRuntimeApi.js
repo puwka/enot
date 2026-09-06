@@ -46,6 +46,7 @@ const mapProduct = (row) => {
     description: row.description || '',
     conditions: row.conditions || '',
     advantages,
+    attributes: row.attributes && typeof row.attributes === 'object' ? row.attributes : {},
     commission: row.commission,
   };
 };

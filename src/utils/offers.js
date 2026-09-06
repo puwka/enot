@@ -1,3 +1,5 @@
+import { getSectionByCatalogPath } from '../admin/cms/productSections';
+
 export const slugify = (value = '') =>
   String(value)
     .toLowerCase()
@@ -31,238 +33,142 @@ export const enrichOffers = (items, meta) => {
   });
 };
 
-export const buildOfferContent = (offer) => {
-  const name = offer.title;
-  const benefits = [offer.benefit1, offer.benefit2, offer.benefit3].filter(Boolean);
+const splitParagraphs = (text) =>
+  String(text || '')
+    .split(/\n+/)
+    .map((row) => row.trim())
+    .filter(Boolean);
 
-  if (offer.variant === 'debit') {
-    return {
-      heroEyebrow: 'Дебетовая карта',
-      heroLead: 'Условия кэшбэка и обслуживания — в одном месте.',
-      specs: [
-        { label: 'Кэшбэк и бонусы', value: offer.benefit1 || 'По условиям банка' },
-        { label: 'Доп. выгода', value: offer.benefit2 || '—' },
-        { label: 'Обслуживание', value: offer.benefit3 || '—' },
-      ],
-      main: [
-        `${name} — дебетовая карта с понятными бонусами для повседневных трат.`,
-        'Сравните условия на ЕнотМани и оформите карту на сайте банка.',
-      ],
-      conditions: [
-        { label: 'Преимущество', value: offer.benefit1 || 'Уточняется при оформлении' },
-        { label: 'Условие', value: offer.benefit2 || 'Уточняется при оформлении' },
-        { label: 'Сервис', value: offer.benefit3 || 'Уточняется при оформлении' },
-      ],
-      advantages: benefits.length
-        ? benefits
-        : ['Бесплатное или льготное обслуживание', 'Кэшбэк и бонусы за покупки', 'Онлайн-оформление'],
-      faq: [
-        {
-          q: 'Как оформить карту?',
-          a: 'Нажмите кнопку оформления — откроется сайт банка, где можно подать заявку онлайн.',
-        },
-        {
-          q: 'Платное ли обслуживание?',
-          a: offer.benefit3
-            ? `В карточке указано: ${offer.benefit3}. Итоговые условия подтверждаются на сайте банка.`
-            : 'Условия обслуживания указаны на сайте банка при оформлении.',
-        },
-        {
-          q: 'Можно ли сравнить с другими картами?',
-          a: 'Да, в разделе «Дебетовые карты» собраны актуальные предложения банков.',
-        },
-      ],
-      extras: [
-        {
-          title: 'Как выбрать карту',
-          text: 'Смотрите на кэшбэк по вашим категориям трат, проценты на остаток и стоимость обслуживания.',
-        },
-        {
-          title: 'Безопасность',
-          text: 'Оформление проходит на официальном сайте банка. ЕнотМани помогает сравнить предложения.',
-        },
-      ],
-    };
+const resolveSection = (offer) => getSectionByCatalogPath(offer.catalogPath) || null;
+
+const buildConditionRows = (offer, section) => {
+  const attrs = offer.attributes || {};
+  const fields = attrs.conditions || {};
+  if (section?.freeformConditions) {
+    const text = offer.conditions || attrs.conditions_text || '';
+    if (!text.trim()) return [];
+    return splitParagraphs(text).map((value, index) => ({
+      label: index === 0 ? 'Условия' : `Условие ${index + 1}`,
+      value,
+    }));
   }
+  const keys = section?.conditionFields || [];
+  return keys
+    .map((field) => ({
+      label: field.label,
+      value: fields[field.key] || '',
+    }))
+    .filter((row) => row.value);
+};
 
-  if (offer.variant === 'job' || offer.variant === 'service') {
-    const label = offer.variant === 'service' ? 'Сервис' : 'Вакансия';
-    return {
-      heroEyebrow: label,
-      heroLead: offer.variant === 'service' ? 'Услуга или подработка от партнёра.' : 'Актуальная вакансия компании.',
-      specs: [
-        { label: label, value: name },
-        { label: 'Направление', value: offer.spec || 'Уточняется' },
-        { label: 'Статус', value: 'Актуальное предложение' },
-      ],
-      main: [
-        `${name} — ${offer.variant === 'service' ? 'сервис' : 'вакансия'} в направлении «${offer.spec || 'компания'}».`,
-        'Оставьте заявку на сайте компании, чтобы узнать детали.',
-      ],
-      conditions: [
-        { label: label, value: name },
-        { label: 'Направление', value: offer.spec || 'Уточняется' },
-        { label: 'Отклик', value: 'Через форму на сайте' },
-      ],
-      advantages: [
-        'Быстрый отклик онлайн',
-        'Актуальные предложения партнёров',
-        'Понятное направление',
-      ],
-      faq: [
-        {
-          q: 'Как откликнуться?',
-          a: 'Нажмите кнопку заявки — откроется страница компании с формой.',
-        },
-        {
-          q: 'Где смотреть похожие предложения?',
-          a: `В разделе «${offer.catalogLabel || label}» и в блоке связанных предложений ниже.`,
-        },
-      ],
-      extras: [
-        {
-          title: 'Что подготовить',
-          text: 'Контакты и краткое описание опыта ускорят рассмотрение заявки.',
-        },
-      ],
-    };
-  }
+const buildSpecs = (offer, section) => {
+  const attrs = offer.attributes || {};
+  const mode = section?.specsMode || 'loan';
+  const advantages = Array.isArray(offer.advantages) ? offer.advantages.filter(Boolean) : [];
 
-  if (offer.variant === 'shop') {
-    return {
-      heroEyebrow: 'Магазины и кешбэк',
-      heroLead: 'Выгодные покупки с картами и программами партнёров.',
-      specs: [
-        { label: 'Выгода', value: offer.benefit1 || 'По условиям' },
-        { label: 'Условие', value: offer.benefit2 || '—' },
-        { label: 'Обслуживание', value: offer.benefit3 || '—' },
-      ],
-      main: [
-        `${name} — предложение с выгодой для покупок в магазинах и у партнёров.`,
-        'Сравните условия и оформите карту или программу на сайте банка.',
-      ],
-      conditions: [
-        { label: 'Выгода', value: offer.benefit1 || 'Уточняется при оформлении' },
-        { label: 'Условие', value: offer.benefit2 || 'Уточняется при оформлении' },
-        { label: 'Сервис', value: offer.benefit3 || 'Уточняется при оформлении' },
-      ],
-      advantages: [offer.benefit1, offer.benefit2, offer.benefit3].filter(Boolean).length
-        ? [offer.benefit1, offer.benefit2, offer.benefit3].filter(Boolean)
-        : ['Кешбэк и бонусы за покупки', 'Онлайн-оформление', 'Актуальные условия партнёров'],
-      faq: [
-        {
-          q: 'Как получить кешбэк?',
-          a: 'Оформите карту или программу на сайте банка и совершайте покупки в категориях партнёров.',
-        },
-        {
-          q: 'Где смотреть другие предложения?',
-          a: 'В разделе «Магазины» собраны карты и программы с выгодой для покупок.',
-        },
-      ],
-      extras: [
-        {
-          title: 'Как выбрать',
-          text: 'Смотрите на категории кешбэка, лимиты и стоимость обслуживания.',
-        },
-      ],
-    };
-  }
-
-  if (offer.variant === 'education') {
-    return {
-      heroEyebrow: 'Обучение',
-      heroLead: 'Направление курса и переход к оформлению.',
-      specs: [
-        { label: 'Направление', value: name },
-        { label: 'Формат', value: 'Онлайн / на сайте школы' },
-        { label: 'Старт', value: 'По заявке' },
-      ],
-      main: [
-        `Направление «${name}» — курсы и программы в каталоге ЕнотМани.`,
-        'Перейдите на сайт школы, чтобы узнать программу, стоимость и даты старта.',
-      ],
-      conditions: [
-        { label: 'Направление', value: name },
-        { label: 'Запись', value: 'Онлайн на сайте школы' },
-        { label: 'Детали курса', value: 'На сайте образовательной организации' },
-      ],
-      advantages: [
-        'Актуальные образовательные направления',
-        'Запись без лишних шагов',
-        'Сравнение похожих курсов в каталоге',
-      ],
-      faq: [
-        {
-          q: 'Как записаться на курс?',
-          a: 'Нажмите кнопку на странице — откроется сайт школы с условиями и формой записи.',
-        },
-        {
-          q: 'Есть ли возрастные ограничения?',
-          a: 'Зависит от программы. Уточняйте на сайте школы перед записью.',
-        },
-        {
-          q: 'Где найти похожие направления?',
-          a: 'В разделе «Статьи и обучение» и в блоке связанных предложений ниже.',
-        },
-      ],
-      extras: [
-        {
-          title: 'Как выбрать программу',
-          text: 'Ориентируйтесь на цель обучения, формат занятий и уровень подготовки.',
-        },
-        {
-          title: 'Прозрачность условий',
-          text: 'Стоимость, расписание и сертификаты публикует школа на своём сайте.',
-        },
-      ],
-    };
-  }
-
-  return {
-    heroEyebrow: offer.catalogLabel || 'Финансовое предложение',
-    heroLead: 'Ключевые условия — ставка, сумма и срок.',
-    specs: [
+  if (mode === 'loan') {
+    return [
       { label: 'Ставка', value: offer.rate || 'По условиям' },
       { label: 'Сумма', value: offer.sum || 'По условиям' },
       { label: 'Срок', value: offer.term || 'По условиям' },
-    ],
-    main: [
-      `${name}: ставка ${offer.rate || 'по условиям'}, сумма ${offer.sum || 'по заявке'}, срок ${offer.term || 'индивидуально'}.`,
-      'Сравните предложение с другими в каталоге и оформите заявку на сайте компании.',
-    ],
-    conditions: [
-      { label: 'Ставка', value: offer.rate || 'Уточняется при оформлении' },
-      { label: 'Сумма', value: offer.sum || 'Уточняется при оформлении' },
-      { label: 'Срок', value: offer.term || 'Уточняется при оформлении' },
-    ],
-    advantages: [
-      'Условия собраны в одном месте',
-      'Быстрый переход к оформлению',
-      'Сравнение с похожими предложениями',
-    ],
-    faq: [
-      {
-        q: 'Как подать заявку?',
-        a: 'Нажмите кнопку оформления — откроется сайт компании, где можно отправить заявку онлайн.',
-      },
-      {
-        q: 'От чего зависит одобрение?',
-        a: 'Решение принимает компания по своим правилам. Итоговые условия фиксируются в договоре.',
-      },
-      {
-        q: 'Можно ли выбрать другое предложение?',
-        a: `Да, вернитесь в раздел «${offer.catalogLabel}» или посмотрите связанные предложения ниже.`,
-      },
-    ],
-    extras: [
-      {
-        title: 'Перед оформлением',
-        text: 'Проверьте ставку, сумму и срок. На сайте компании доступны полные условия продукта.',
-      },
-      {
-        title: 'Роль ЕнотМани',
-        text: 'Мы помогаем сравнить предложения. Договор и выдача средств — на стороне компании.',
-      },
-    ],
+    ];
+  }
+  if (mode === 'advantages') {
+    const labels =
+      offer.variant === 'settlement' || section?.key === 'settlement-accounts'
+        ? ['Преимущество 1', 'Преимущество 2', 'Преимущество 3']
+        : ['Преимущество 1', 'Преимущество 2', 'Преимущество 3'];
+    return [0, 1, 2].map((index) => ({
+      label: labels[index],
+      value: advantages[index] || offer[`benefit${index + 1}`] || '—',
+    }));
+  }
+  if (mode === 'shop') {
+    const cond = attrs.conditions || {};
+    return [
+      { label: 'Категория', value: cond.shop_category || offer.spec || '—' },
+      { label: 'Деятельность магазина', value: cond.shop_activity || offer.benefit1 || '—' },
+      { label: 'Регион', value: cond.shop_region || offer.benefit2 || '—' },
+    ];
+  }
+  if (mode === 'education') {
+    return [
+      { label: 'Направление', value: offer.title || '—' },
+      { label: 'Формат', value: attrs.education_format || '—' },
+      { label: 'Старт', value: attrs.education_start || '—' },
+    ];
+  }
+  if (mode === 'service') {
+    return [
+      { label: 'Сервис', value: offer.title || '—' },
+      { label: 'Направление', value: offer.spec || '—' },
+      { label: 'Статус', value: 'Актуальное предложение' },
+    ];
+  }
+  if (mode === 'job') {
+    return [
+      { label: 'Вакансия', value: offer.title || '—' },
+      { label: 'Направление', value: offer.spec || '—' },
+      { label: 'Статус', value: 'Актуальное предложение' },
+    ];
+  }
+  return [
+    { label: 'Ставка', value: offer.rate || '—' },
+    { label: 'Сумма', value: offer.sum || '—' },
+    { label: 'Срок', value: offer.term || '—' },
+  ];
+};
+
+const defaultFaq = (offer) => [
+  {
+    q: 'Как подать заявку?',
+    a: 'Нажмите кнопку оформления — откроется сайт компании, где можно отправить заявку онлайн.',
+  },
+  {
+    q: 'Можно ли выбрать другое предложение?',
+    a: `Да, вернитесь в раздел «${offer.catalogLabel || 'каталог'}» или посмотрите связанные предложения ниже.`,
+  },
+];
+
+export const buildOfferContent = (offer) => {
+  const section = resolveSection(offer);
+  const attrs = offer.attributes || {};
+  const description = offer.description || '';
+  const mainInfo = attrs.main_info || '';
+  const advantages = Array.isArray(offer.advantages) ? offer.advantages.filter(Boolean) : [];
+  const heroEyebrow =
+    section?.heroEyebrow ||
+    (offer.variant === 'settlement'
+      ? 'Расчётный счёт'
+      : offer.catalogLabel || 'Предложение');
+
+  const main = description
+    ? splitParagraphs(description)
+    : [`${offer.title} — предложение в разделе «${offer.catalogLabel || 'каталог'}».`];
+
+  const conditions = buildConditionRows(offer, section);
+  const withFallbackConditions =
+    conditions.length > 0
+      ? conditions
+      : section?.freeformConditions
+        ? []
+        : (section?.conditionFields || []).map((field) => ({
+            label: field.label,
+            value: 'Уточняется при оформлении',
+          }));
+
+  return {
+    heroEyebrow,
+    heroLead: attrs.lead || '',
+    specs: buildSpecs(offer, section),
+    main,
+    conditions: withFallbackConditions,
+    advantages,
+    mainInfo: mainInfo ? splitParagraphs(mainInfo) : [],
+    showConditions: section ? Boolean(section.showConditions) : true,
+    showAdvantages: section ? Boolean(section.showAdvantages) : true,
+    showBottomMainInfo: section ? Boolean(section.showBottomMainInfo) : false,
+    faq: defaultFaq(offer),
+    extras: [],
   };
 };

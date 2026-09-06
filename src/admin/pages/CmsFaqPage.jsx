@@ -1,17 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
-import {
-  cmsCreate,
-  cmsDelete,
-  cmsList,
-  cmsPublish,
-  cmsReorder,
-  cmsUnpublish,
-  cmsUpdate,
-} from '../cms/cmsApi';
+import { Link } from 'react-router-dom';
+import { cmsCreate, cmsDelete, cmsList, cmsReorder, cmsUpdate } from '../cms/cmsApi';
 import { ConfirmDialog, CmsAlert, CmsLoading, StatusBadge } from '../cms/CmsUi';
 import '../cms/Cms.css';
 
-const emptyFaq = { question: '', answer: '', category: '', sort_order: 0, status: 'draft' };
+const emptyFaq = { question: '', answer: '', category: '', sort_order: 0, status: 'published' };
 
 const CmsFaqPage = () => {
   const [items, setItems] = useState([]);
@@ -28,8 +21,12 @@ const CmsFaqPage = () => {
     try {
       const data = await cmsList('faq');
       setItems(data?.items || []);
-    } catch {
-      setError('Не удалось загрузить FAQ.');
+    } catch (err) {
+      if (err?.code === 'CMS_NOT_INSTALLED') {
+        setError('CMS ещё не подключена. Выполните npm run db:migrate на сервере.');
+      } else {
+        setError('Не удалось загрузить FAQ. Проверьте права доступа и сессию админа.');
+      }
     } finally {
       setLoading(false);
     }
@@ -47,21 +44,41 @@ const CmsFaqPage = () => {
   const save = async () => {
     setError('');
     setMessage('');
+    if (!form.question.trim() || !form.answer.trim()) {
+      setError('Заполните вопрос и ответ.');
+      return;
+    }
     try {
+      const payload = {
+        question: form.question.trim(),
+        answer: form.answer.trim(),
+        category: form.category.trim() || null,
+        sort_order: Number(form.sort_order || 0),
+        status: form.status || 'published',
+      };
       if (editId) {
-        await cmsUpdate('faq', editId, form);
-        setMessage('FAQ обновлён.');
+        await cmsUpdate('faq', editId, payload);
+        setMessage('Вопрос обновлён. На сайте /faq появятся только опубликованные.');
       } else {
         await cmsCreate('faq', {
-          ...form,
-          sort_order: form.sort_order || (items.length + 1) * 10,
+          ...payload,
+          sort_order: payload.sort_order || (items.length + 1) * 10,
         });
-        setMessage('FAQ создан.');
+        setMessage('Вопрос создан и будет на странице /faq, если статус «Опубликовано».');
       }
       reset();
       await load();
     } catch {
       setError('Не удалось сохранить FAQ.');
+    }
+  };
+
+  const setStatus = async (item, status) => {
+    try {
+      await cmsUpdate('faq', item.id, { status });
+      await load();
+    } catch {
+      setError('Не удалось изменить статус.');
     }
   };
 
@@ -74,7 +91,12 @@ const CmsFaqPage = () => {
     next[target] = tmp;
     const ordered = next.map((item, i) => ({ id: item.id, sort_order: i * 10 }));
     setItems(next.map((item, i) => ({ ...item, sort_order: i * 10 })));
-    await cmsReorder('faq', ordered);
+    try {
+      await cmsReorder('faq', ordered);
+    } catch {
+      setError('Не удалось изменить порядок.');
+      await load();
+    }
   };
 
   if (loading) return <CmsLoading />;
@@ -83,7 +105,16 @@ const CmsFaqPage = () => {
     <div className="cms-dash">
       <section className="cms-panel">
         <div className="cms-toolbar">
-          <strong>{editId ? 'Редактирование FAQ' : 'Новый вопрос'}</strong>
+          <div>
+            <strong>{editId ? 'Редактирование FAQ' : 'Новый вопрос'}</strong>
+            <p className="cms-panel__lead" style={{ margin: '6px 0 0' }}>
+              Вопросы со статусом «Опубликовано» показываются на странице{' '}
+              <Link to="/faq" target="_blank" rel="noreferrer">
+                /faq
+              </Link>
+              .
+            </p>
+          </div>
           {editId ? (
             <button type="button" className="admin-btn admin-btn--ghost" onClick={reset}>
               Новый
@@ -99,11 +130,11 @@ const CmsFaqPage = () => {
           </label>
           <label className="cms-field">
             <span>Ответ</span>
-            <textarea value={form.answer} onChange={(e) => setForm((prev) => ({ ...prev, answer: e.target.value }))} />
+            <textarea rows={4} value={form.answer} onChange={(e) => setForm((prev) => ({ ...prev, answer: e.target.value }))} />
           </label>
           <div className="cms-form__grid">
             <label className="cms-field">
-              <span>Категория</span>
+              <span>Категория (необязательно)</span>
               <input value={form.category} onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))} />
             </label>
             <label className="cms-field">
@@ -115,15 +146,13 @@ const CmsFaqPage = () => {
               />
             </label>
           </div>
-          <label className="cms-inline-check">
-            <input
-              type="checkbox"
-              checked={form.status === 'published'}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, status: e.target.checked ? 'published' : 'draft' }))
-              }
-            />
-            Active (опубликован)
+          <label className="cms-field">
+            <span>Статус</span>
+            <select value={form.status} onChange={(e) => setForm((prev) => ({ ...prev, status: e.target.value }))}>
+              <option value="published">Опубликовано (на сайте)</option>
+              <option value="draft">Черновик</option>
+              <option value="archived">В архиве</option>
+            </select>
           </label>
           <div className="cms-toolbar__right">
             <button type="button" className="admin-btn admin-btn--primary" onClick={save}>
@@ -134,10 +163,10 @@ const CmsFaqPage = () => {
       </section>
 
       <section className="cms-panel">
-        <strong>Список FAQ</strong>
+        <strong>Список FAQ ({items.length})</strong>
         {!items.length ? (
           <div className="cms-dash-empty" style={{ marginTop: 14 }}>
-            <p>Вопросов пока нет.</p>
+            <p>Вопросов пока нет. Создайте первый — он появится на /faq.</p>
           </div>
         ) : (
           <table className="cms-table">
@@ -182,12 +211,12 @@ const CmsFaqPage = () => {
                         Изменить
                       </button>
                       {item.status !== 'published' ? (
-                        <button type="button" className="admin-btn admin-btn--ghost" onClick={() => cmsPublish('faq', item.id).then(load)}>
-                          Publish
+                        <button type="button" className="admin-btn admin-btn--ghost" onClick={() => setStatus(item, 'published')}>
+                          Опубликовать
                         </button>
                       ) : (
-                        <button type="button" className="admin-btn admin-btn--ghost" onClick={() => cmsUnpublish('faq', item.id).then(load)}>
-                          Draft
+                        <button type="button" className="admin-btn admin-btn--ghost" onClick={() => setStatus(item, 'draft')}>
+                          В черновик
                         </button>
                       )}
                       <button type="button" className="admin-btn admin-btn--danger" onClick={() => setDeleteId(item.id)}>

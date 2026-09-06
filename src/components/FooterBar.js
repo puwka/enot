@@ -6,7 +6,9 @@ import maxIcon from '../images/max.png';
 import './Footer.css';
 
 const PRODUCT_LINKS = [
-  { to: '/loans', label: 'Кредиты' },
+  { to: '/loans', label: 'Микрозаймы' },
+  { to: '/consumer-loans', label: 'Потреб. кредиты' },
+  { to: '/collateral-loans', label: 'Под залог' },
   { to: '/cards', label: 'Дебетовые карты' },
   { to: '/auto-loans', label: 'Кредитные карты' },
 ];

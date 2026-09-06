@@ -155,6 +155,7 @@ const NAV_ICONS = {
   faq: 'help',
   loans: 'card',
   'consumer-loans': 'card',
+  'collateral-loans': 'card',
   'debit-cards': 'card',
   'credit-cards': 'card',
   'settlement-accounts': 'bank',

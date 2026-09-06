@@ -60,26 +60,26 @@ const AccountOverview = () => {
         </div>
       </section>
 
-      <section className="cabinet-grid cabinet-grid--3">
-        <article className="cabinet-panel">
-          <h2>Статистика заявок</h2>
-          <div className="cabinet-stats">
-            <div className="cabinet-stat">
-              <span>Заявок</span>
-              <strong>{apps.total}</strong>
-            </div>
-            <div className="cabinet-stat">
-              <span>Одобрено</span>
-              <strong>{apps.approved}</strong>
-            </div>
-            <div className="cabinet-stat">
-              <span>Отказов</span>
-              <strong>{apps.rejected}</strong>
-            </div>
+      <section className="cabinet-panel" style={{ marginBottom: 16 }}>
+        <h2>Статистика заявок</h2>
+        <div className="cabinet-stats">
+          <div className="cabinet-stat">
+            <span>Заявок</span>
+            <strong>{apps.total}</strong>
           </div>
-          <p className="cabinet-stats__note">Процент одобрения внутри сервиса: {approval}%</p>
-        </article>
+          <div className="cabinet-stat">
+            <span>Одобрено</span>
+            <strong>{apps.approved}</strong>
+          </div>
+          <div className="cabinet-stat">
+            <span>Отказов</span>
+            <strong>{apps.rejected}</strong>
+          </div>
+        </div>
+        <p className="cabinet-stats__note">Процент одобрения внутри сервиса: {approval}%</p>
+      </section>
 
+      <section className="cabinet-grid">
         <article className="cabinet-panel">
           <h2>Быстрые действия</h2>
           <div className="cabinet-actions">

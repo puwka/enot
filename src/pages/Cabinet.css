@@ -348,16 +348,22 @@
 }
 
 .cabinet-stats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   margin-top: 8px;
+}
+
+.cabinet-stats .cabinet-stat {
+  flex: 1 1 110px;
+  min-width: 100px;
 }
 
 .cabinet-stats__note {
   margin-top: 12px;
   font-size: 14px;
   color: #6b7689;
+  line-height: 1.4;
 }
 
 .cabinet-stat span {
@@ -365,6 +371,7 @@
   margin-bottom: 6px;
   font-size: 13px;
   color: #6b7689;
+  white-space: nowrap;
 }
 
 .cabinet-stat strong {

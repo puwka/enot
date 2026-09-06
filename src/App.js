@@ -282,6 +282,22 @@ function App() {
                     }
                   />
                   <Route
+                    path="products/collateral-loans"
+                    element={
+                      <AdminRoleRoute permission="products">
+                        <CmsProductsList sectionKey="collateral-loans" />
+                      </AdminRoleRoute>
+                    }
+                  />
+                  <Route
+                    path="products/collateral-loans/:id"
+                    element={
+                      <AdminRoleRoute permission="products">
+                        <CmsProductEdit sectionKey="collateral-loans" />
+                      </AdminRoleRoute>
+                    }
+                  />
+                  <Route
                     path="products/settlement-accounts"
                     element={
                       <AdminRoleRoute permission="products">

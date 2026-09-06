@@ -12,12 +12,12 @@ const AccountLoans = () => {
     <>
       <section className="cabinet-panel" style={{ marginBottom: 16 }}>
         <h2>Статистика заявок</h2>
-        <div className="cabinet-grid cabinet-grid--3">
+        <div className="cabinet-stats">
           <div className="cabinet-stat"><span>Заявок</span><strong>{apps.total}</strong></div>
           <div className="cabinet-stat"><span>Одобрено</span><strong>{apps.approved}</strong></div>
           <div className="cabinet-stat"><span>Отказов</span><strong>{apps.rejected}</strong></div>
         </div>
-        <p style={{ marginTop: 12 }}>Процент одобрения внутри сервиса: {approval}%</p>
+        <p className="cabinet-stats__note">Процент одобрения внутри сервиса: {approval}%</p>
       </section>
 
       <section className="cabinet-panel">

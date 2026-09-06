@@ -272,6 +272,16 @@ const Home = () => {
               </span>
               <span className="home-cat__chevron" aria-hidden="true">›</span>
             </Link>
+            <Link to="/collateral-loans" className="home-cat" style={{ '--reveal-delay': '120ms' }}>
+              <span className="home-cat__icon" aria-hidden="true">
+                <img src={catLoansIcon} alt="" />
+              </span>
+              <span className="home-cat__text">
+                <strong>Кредиты под залог</strong>
+                <span>Под залог ПТС, авто и недвижимости</span>
+              </span>
+              <span className="home-cat__chevron" aria-hidden="true">›</span>
+            </Link>
             <Link to="/cards" className="home-cat" style={{ '--reveal-delay': '140ms' }}>
               <span className="home-cat__icon" aria-hidden="true">
                 <img src={catDebitIcon} alt="" />

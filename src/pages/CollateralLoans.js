@@ -1,4 +1,5 @@
-import CatalogPage from '../components/CatalogPage';
+import CatalogPage, { PRODUCT_CATEGORIES } from '../components/CatalogPage';
+import { useCatalogProducts } from '../hooks/useCatalogProducts';
 import draiv from '../images/draiv.webp';
 import car from '../images/car.webp';
 import dobro from '../images/dobro.webp';
@@ -23,17 +24,21 @@ export const COLLATERAL_LOANS_CATALOG = {
   items: COLLATERAL_LOANS_ITEMS,
 };
 
-const CollateralLoans = () => (
-  <CatalogPage
-    title="Кредиты под залог"
-    description="Предложения под залог ПТС, авто и недвижимости. Сравните ставки, сроки и суммы."
-    variant="loan"
-    catalogPath="/collateral-loans"
-    catalogLabel="Кредиты под залог"
-    catalogPrefix="collateral"
-    items={COLLATERAL_LOANS_ITEMS}
-    ctaLabel="Подробнее"
-  />
-);
+const CollateralLoans = () => {
+  const items = useCatalogProducts('collateral-loans', COLLATERAL_LOANS_ITEMS);
+  return (
+    <CatalogPage
+      title="Кредиты под залог"
+      description="Предложения под залог ПТС, авто и недвижимости. Сравните ставки, сроки и суммы."
+      variant="loan"
+      catalogPath="/collateral-loans"
+      catalogLabel="Кредиты под залог"
+      catalogPrefix="collateral"
+      items={items}
+      categories={PRODUCT_CATEGORIES}
+      ctaLabel="Подробнее"
+    />
+  );
+};
 
 export default CollateralLoans;

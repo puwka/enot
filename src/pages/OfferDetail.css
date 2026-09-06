@@ -139,6 +139,20 @@
   margin-bottom: 12px;
 }
 
+.offer-grid--single {
+  grid-template-columns: 1fr;
+}
+
+.offer-main-text p {
+  margin: 0 0 10px;
+  color: #4b5568;
+  line-height: 1.55;
+}
+
+.offer-main-text p:last-child {
+  margin-bottom: 0;
+}
+
 .offer-panel {
   padding: 22px 20px;
   margin-bottom: 12px;

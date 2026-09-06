@@ -11,7 +11,7 @@ export const PRODUCT_CATEGORIES = [
   { to: '/auto-loans', label: 'Кредитные карты' },
   { to: '/cards', label: 'Дебетовые карты' },
   { to: '/settlement-accounts', label: 'Расчётные счета' },
-  { to: '/collateral-loans', label: 'Под залог' },
+  { to: '/collateral-loans', label: 'Кредиты под залог' },
 ];
 
 export const INFO_CATEGORIES = [
@@ -82,10 +82,10 @@ const COLUMNS = {
     { key: 'spec', label: 'Категория' },
   ],
   shop: [
-    { key: 'title', label: 'Предложение' },
-    { key: 'benefit1', label: 'Выгода' },
-    { key: 'benefit2', label: 'Условие' },
-    { key: 'benefit3', label: 'Сервис' },
+    { key: 'title', label: 'Магазин' },
+    { key: 'spec', label: 'Категория' },
+    { key: 'benefit1', label: 'Деятельность' },
+    { key: 'benefit2', label: 'Регион' },
   ],
 };
 

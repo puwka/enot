@@ -29,17 +29,12 @@ const OfferDetail = () => {
     setRuntimeRelated([]);
     setLoading(!getOfferBySlug(decodedSlug));
 
-    Promise.all([
-      fetchOfferBySlug(decodedSlug),
-      Promise.resolve(null),
-    ])
-      .then(async ([dbOffer]) => {
+    fetchOfferBySlug(decodedSlug)
+      .then(async (dbOffer) => {
         if (cancelled) return;
         setRuntimeOffer(dbOffer);
         const knownOffer = dbOffer || getOfferBySlug(decodedSlug);
-        const categorySlug = knownOffer
-          ? CATALOG_PATH_TO_CATEGORY_SLUG[knownOffer.catalogPath]
-          : null;
+        const categorySlug = knownOffer ? CATALOG_PATH_TO_CATEGORY_SLUG[knownOffer.catalogPath] : null;
         if (categorySlug) {
           const relatedItems = await fetchRelatedOffersByCategory(categorySlug, decodedSlug, 4).catch(() => []);
           if (!cancelled && relatedItems.length) setRuntimeRelated(relatedItems);
@@ -86,6 +81,11 @@ const OfferDetail = () => {
   }
 
   const fav = isFavorite(offer);
+  const freeformText = String(offer.conditions || offer.attributes?.conditions_text || '').trim();
+  const isFreeformConditions = offer.catalogPath === '/settlement-accounts';
+  const showConditions = content.showConditions && (isFreeformConditions ? Boolean(freeformText) : true);
+  const showAdvantages = content.showAdvantages && content.advantages.length > 0;
+  const showBottomMain = content.showBottomMainInfo && content.mainInfo.length > 0;
 
   return (
     <main className="offer">
@@ -102,7 +102,7 @@ const OfferDetail = () => {
           <div className="offer-hero__text">
             <p className="offer-hero__eyebrow">{content.heroEyebrow}</p>
             <h1 className="offer-hero__title">{offer.title}</h1>
-            <p className="offer-hero__lead">{content.heroLead}</p>
+            {content.heroLead ? <p className="offer-hero__lead">{content.heroLead}</p> : null}
             <div className="offer-hero__actions">
               <a
                 href={offer.link}
@@ -137,7 +137,7 @@ const OfferDetail = () => {
           ))}
         </section>
 
-        <section className="offer-grid">
+        <section className={`offer-grid${showConditions ? '' : ' offer-grid--single'}`}>
           <div className="offer-panel">
             <h2>Основная информация</h2>
             {content.main.map((paragraph) => (
@@ -145,27 +145,52 @@ const OfferDetail = () => {
             ))}
           </div>
 
-          <div className="offer-panel">
-            <h2>Условия</h2>
-            <ul className="offer-conditions">
-              {content.conditions.map((item) => (
-                <li key={item.label}>
-                  <span>{item.label}</span>
-                  <strong>{item.value}</strong>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {showConditions ? (
+            <div className="offer-panel">
+              <h2>Условия</h2>
+              {isFreeformConditions ? (
+                <div className="offer-main-text">
+                  {freeformText
+                    .split(/\n+/)
+                    .map((row) => row.trim())
+                    .filter(Boolean)
+                    .map((paragraph) => (
+                      <p key={paragraph}>{paragraph}</p>
+                    ))}
+                </div>
+              ) : (
+                <ul className="offer-conditions">
+                  {content.conditions.map((item) => (
+                    <li key={item.label}>
+                      <span>{item.label}</span>
+                      <strong>{item.value}</strong>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ) : null}
         </section>
 
-        <section className="offer-panel">
-          <h2>Преимущества</h2>
-          <ul className="offer-benefits">
-            {content.advantages.map((item) => (
-              <li key={item}>{item}</li>
+        {showAdvantages ? (
+          <section className="offer-panel">
+            <h2>Преимущества</h2>
+            <ul className="offer-benefits">
+              {content.advantages.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+
+        {showBottomMain ? (
+          <section className="offer-panel">
+            <h2>Основная информация</h2>
+            {content.mainInfo.map((paragraph) => (
+              <p key={paragraph}>{paragraph}</p>
             ))}
-          </ul>
-        </section>
+          </section>
+        ) : null}
 
         {related.length ? (
           <section className="offer-related">
@@ -180,9 +205,7 @@ const OfferDetail = () => {
                     <img src={item.image} alt="" />
                   </span>
                   <strong>{item.title}</strong>
-                  <span>
-                    {item.rate || item.benefit1 || item.spec || item.catalogLabel}
-                  </span>
+                  <span>{item.rate || item.benefit1 || item.spec || item.catalogLabel}</span>
                 </Link>
               ))}
             </div>
@@ -210,15 +233,6 @@ const OfferDetail = () => {
               );
             })}
           </div>
-        </section>
-
-        <section className="offer-extras">
-          {content.extras.map((block) => (
-            <article key={block.title} className="offer-panel">
-              <h2>{block.title}</h2>
-              <p>{block.text}</p>
-            </article>
-          ))}
         </section>
       </div>
     </main>

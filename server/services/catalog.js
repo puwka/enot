@@ -29,6 +29,10 @@ const mapProduct = (row) => {
     services: '/services',
     shops: '/shops',
   };
+  const variant =
+    categorySlug === 'settlement-accounts'
+      ? 'settlement'
+      : row.category_variant || 'loan';
   return {
     id: row.id,
     slug: row.slug,
@@ -46,12 +50,13 @@ const mapProduct = (row) => {
     spec: row.product_type || row.spec || '',
     catalogPath: row.category_path || pathFromSlug[categorySlug] || '/loans',
     catalogLabel: row.category_title || 'Продукты',
-    variant: row.category_variant || 'loan',
+    variant,
     ctaLabel: row.category_cta_label || 'Подробнее',
     categoryId: row.category_id,
     description: row.description || '',
     conditions: row.conditions || '',
     advantages,
+    attributes: row.attributes && typeof row.attributes === 'object' ? row.attributes : {},
     commission: row.commission,
     bankId: row.bank_id,
   };

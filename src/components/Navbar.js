@@ -9,6 +9,7 @@ import './Header.css';
 const NAV_PRIMARY = [
   { to: '/loans', label: 'Микрозаймы', shortLabel: 'Займы' },
   { to: '/consumer-loans', label: 'Потреб. кредиты', shortLabel: 'Потреб.' },
+  { to: '/collateral-loans', label: 'Под залог', shortLabel: 'Залог' },
   { to: '/cards', label: 'Дебетовые карты', shortLabel: 'Дебетовые' },
   { to: '/auto-loans', label: 'Кредитные карты', shortLabel: 'Кредитные' },
 ];
@@ -22,6 +23,7 @@ const NAV_MORE = [
   { to: '/Education', label: 'Статьи' },
   { to: '/news', label: 'Новости' },
   { to: '/guide', label: 'Справочник' },
+  { to: '/faq', label: 'FAQ' },
 ];
 
 const NAV_ITEMS = [...NAV_PRIMARY, ...NAV_MORE];
@@ -46,6 +48,13 @@ const SEARCH_INDEX = [
     title: 'Потребительские кредиты',
     description: 'Ставки и условия банков по кредитам',
     keywords: ['потребительский', 'потребительские', 'наличными', 'рефинансирование', 'потреб'],
+    group: 'Продукты',
+  },
+  {
+    to: '/collateral-loans',
+    title: 'Кредиты под залог',
+    description: 'Под залог ПТС, авто и недвижимости',
+    keywords: ['залог', 'птс', 'авто', 'недвижимость', 'под залог'],
     group: 'Продукты',
   },
   {

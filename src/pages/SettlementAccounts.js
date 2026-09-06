@@ -6,7 +6,7 @@ export const SETTLEMENT_ITEMS = [];
 export const SETTLEMENT_CATALOG = {
   path: '/settlement-accounts',
   label: 'Расчётные счета',
-  variant: 'debit',
+  variant: 'settlement',
   prefix: 'settlement',
   ctaLabel: 'Открыть счёт',
   items: SETTLEMENT_ITEMS,
