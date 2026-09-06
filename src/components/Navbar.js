@@ -7,18 +7,18 @@ import HeartIcon from '../components/HeartIcon';
 import './Header.css';
 
 const NAV_PRIMARY = [
-  { to: '/loans', label: 'Микрозаймы' },
+  { to: '/loans', label: 'Микрозаймы', shortLabel: 'Займы' },
   { to: '/consumer-loans', label: 'Потреб. кредиты', shortLabel: 'Потреб.' },
   { to: '/cards', label: 'Дебетовые карты', shortLabel: 'Дебетовые' },
   { to: '/auto-loans', label: 'Кредитные карты', shortLabel: 'Кредитные' },
-  { to: '/settlement-accounts', label: 'Расчётные счета', shortLabel: 'Счета' },
+];
+
+const NAV_MORE = [
+  { to: '/settlement-accounts', label: 'Расчётные счета' },
   { to: '/obuchenie', label: 'Обучение' },
   { to: '/services', label: 'Сервисы' },
   { to: '/shops', label: 'Магазины' },
   { to: '/Job', label: 'Вакансии' },
-];
-
-const NAV_MORE = [
   { to: '/Education', label: 'Статьи' },
   { to: '/news', label: 'Новости' },
   { to: '/guide', label: 'Справочник' },
@@ -337,7 +337,7 @@ const Navbar = () => {
   return (
     <header className={`site-header${isMenuOpen ? ' is-menu-open' : ''}`}>
       <div className="site-header__bar">
-        <div className="site-header__inner container">
+        <div className="site-header__inner">
           <Link to="/" className="site-header__brand" onClick={closeMenu}>
             <img src={logoImage} alt="ЕнотМани" className="site-header__logo" />
             <span className="site-header__brand-name">ЕнотМани</span>
@@ -591,15 +591,9 @@ const Navbar = () => {
                 }
                 onClick={closeMenu}
               >
-                {item.label}
+                {item.to === '/consumer-loans' ? 'Потребительские кредиты' : item.label}
               </NavLink>
             ))}
-            <NavLink to="/consumer-loans" className="site-header__drawer-link" onClick={closeMenu}>
-              Потребительские кредиты
-            </NavLink>
-            <NavLink to="/shops" className="site-header__drawer-link" onClick={closeMenu}>
-              Магазины
-            </NavLink>
             <NavLink to="/faq" className="site-header__drawer-link" onClick={closeMenu}>
               Вопросы и ответы
             </NavLink>
