@@ -27,13 +27,38 @@ export const ARTICLE_BLOCK_TYPES = [
   { value: 'warning', label: 'Предупреждение' },
 ];
 
-export const slugify = (value = '') =>
-  String(value)
+const CYR_TO_LAT = {
+  а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'e', ж: 'zh', з: 'z',
+  и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r',
+  с: 's', т: 't', у: 'u', ф: 'f', х: 'h', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'sch',
+  ъ: '', ы: 'y', ь: '', э: 'e', ю: 'yu', я: 'ya',
+};
+
+/** Latin slug for URLs; Cyrillic is transliterated so saves don't break on short/cyrillic-only values. */
+export const slugify = (value = '') => {
+  const raw = String(value || '')
+    .trim()
     .toLowerCase()
-    .replace(/ё/g, 'е')
-    .replace(/[^a-z0-9а-я]+/gi, '-')
+    .replace(/ё/g, 'е');
+  let out = '';
+  for (const ch of raw) {
+    if (CYR_TO_LAT[ch] !== undefined) out += CYR_TO_LAT[ch];
+    else if (/[a-z0-9]/.test(ch)) out += ch;
+    else out += '-';
+  }
+  return out
+    .replace(/-+/g, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, 80);
+};
+
+export const ensureProductSlug = (slug, title) => {
+  let next = slugify(slug) || slugify(title);
+  if (!next || next.length < 2) {
+    next = `product-${Date.now().toString(36)}`;
+  }
+  return next;
+};
 
 export const statusLabel = (status) => {
   const found = CONTENT_STATUSES.find((item) => item.value === status);

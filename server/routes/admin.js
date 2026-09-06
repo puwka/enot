@@ -89,7 +89,13 @@ router.post('/cms', async (req, res) => {
       return res.status(403).json({ error: 'FORBIDDEN' });
     }
     if (/SLUG_EXISTS/i.test(message)) {
-      return res.status(409).json({ error: 'SLUG_EXISTS' });
+      return res.status(409).json({
+        error: 'SLUG_EXISTS',
+        message: 'Такой slug уже занят. Измените адрес продукта.',
+      });
+    }
+    if (/INVALID_UUID|CATEGORY_REQUIRED|REQUIRED_FIELD/i.test(message)) {
+      return res.status(400).json({ error: 'VALIDATION_ERROR', message });
     }
     if (/Could not find the function|PGRST202|function .* does not exist/i.test(message)) {
       return res.status(503).json({ error: 'CMS_NOT_INSTALLED' });

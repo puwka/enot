@@ -4,7 +4,7 @@ import { cmsCreate, cmsGet, cmsList, cmsUpdate } from '../cms/cmsApi';
 import { PRODUCT_SECTIONS } from '../cms/productSections';
 import { getSiteProductBySlug, getSiteBanks, mergeBankItems } from '../cms/siteContent';
 import { resolveProductImage } from '../../data/productImages';
-import { slugify } from '../cms/cmsConstants';
+import { slugify, ensureProductSlug } from '../cms/cmsConstants';
 import CmsImageUpload from '../cms/CmsImageUpload';
 import { CmsAlert, CmsLoading, StatusBadge } from '../cms/CmsUi';
 import '../cms/Cms.css';
@@ -140,7 +140,7 @@ const CmsProductEdit = ({ sectionKey }) => {
     load();
   }, [load]);
 
-  const canSave = useMemo(() => form.title.trim() && form.slug.trim(), [form.title, form.slug]);
+  const canSave = useMemo(() => Boolean(form.title.trim()), [form.title]);
 
   const logoPreview = useMemo(
     () =>
@@ -157,51 +157,92 @@ const CmsProductEdit = ({ sectionKey }) => {
     setSaving(true);
     setError('');
     try {
+      const allowedSlugs = section?.categorySlugs || [section?.categorySlug].filter(Boolean);
       let categoryId = form.category_id || null;
-      if (!categoryId && section?.categorySlug) {
-        const selectedCategory = categories.find((entry) => entry.slug === section.categorySlug);
-        categoryId = selectedCategory?.id || null;
+      const sectionCategory = categories.find((entry) => entry.slug === section?.categorySlug);
+      if (isSimple) {
+        categoryId = sectionCategory?.id || categoryId;
+      } else if (categoryId) {
+        const selected = categories.find((entry) => entry.id === categoryId);
+        if (selected && allowedSlugs.length && !allowedSlugs.includes(selected.slug)) {
+          categoryId = sectionCategory?.id || categoryId;
+        }
+      } else {
+        categoryId = sectionCategory?.id || null;
       }
       if (!categoryId) {
         setError('Не выбрана категория раздела. Проверьте категории в админке или выполните миграции БД.');
         setSaving(false);
         return;
       }
+
+      let slug = ensureProductSlug(form.slug, form.title);
       const payload = {
         title: form.title.trim(),
-        slug: slugify(form.slug),
+        slug,
         bank_id: form.bank_id && !String(form.bank_id).startsWith('site-') ? form.bank_id : null,
         category_id: categoryId,
         product_type: form.product_type.trim() || null,
-        apr_rate: form.apr_rate === '' ? null : Number(form.apr_rate),
-        amount_min: form.amount_min === '' ? null : Number(form.amount_min),
-        amount_max: form.amount_max === '' ? null : Number(form.amount_max),
-        term_min: form.term_min === '' ? null : Number(form.term_min),
-        term_max: form.term_max === '' ? null : Number(form.term_max),
-        monthly_payment: form.monthly_payment === '' ? null : Number(form.monthly_payment),
+        apr_rate: form.apr_rate === '' || form.apr_rate == null ? null : Number(form.apr_rate),
+        amount_min: form.amount_min === '' || form.amount_min == null ? null : Number(form.amount_min),
+        amount_max: form.amount_max === '' || form.amount_max == null ? null : Number(form.amount_max),
+        term_min: form.term_min === '' || form.term_min == null ? null : Number(form.term_min),
+        term_max: form.term_max === '' || form.term_max == null ? null : Number(form.term_max),
+        monthly_payment:
+          form.monthly_payment === '' || form.monthly_payment == null ? null : Number(form.monthly_payment),
         commission: form.commission.trim() || null,
         description: form.description.trim() || null,
         conditions: form.conditions.trim() || null,
-        advantages: form.advantages_text.split('\n').map((row) => row.trim()).filter(Boolean),
+        advantages: form.advantages_text
+          .split('\n')
+          .map((row) => row.trim())
+          .filter(Boolean),
         logo_url: form.logo_url.trim() || null,
-        link: form.link.trim() || null,
+        link: form.link.trim() || 'https://example.com',
+        partner_url: form.link.trim() || 'https://example.com',
         active: Boolean(form.active),
         featured: Boolean(form.featured),
         status: form.status || 'published',
         sort_order: Number(form.sort_order || 0),
       };
-      if (isNew || String(item?.id || '').startsWith('site-')) {
-        const created = await cmsCreate('products', payload);
-        navigate(`${section.listPath}/${created?.item?.id || ''}`, { replace: true });
-      } else {
-        await cmsUpdate('products', id, payload);
-        await load();
+
+      const saveOnce = async (nextSlug) => {
+        const body = { ...payload, slug: nextSlug };
+        if (isNew || String(item?.id || '').startsWith('site-')) {
+          return cmsCreate('products', body);
+        }
+        await cmsUpdate('products', id, body);
+        return null;
+      };
+
+      try {
+        const created = await saveOnce(slug);
+        if (created) {
+          navigate(`${section.listPath}/${created?.item?.id || ''}`, { replace: true });
+        } else {
+          await load();
+        }
+      } catch (firstErr) {
+        if (firstErr?.code === 'SLUG_EXISTS') {
+          slug = `${slug}-${Date.now().toString(36).slice(-4)}`;
+          setForm((prev) => ({ ...prev, slug }));
+          const created = await saveOnce(slug);
+          if (created) {
+            navigate(`${section.listPath}/${created?.item?.id || ''}`, { replace: true });
+          } else {
+            await load();
+          }
+        } else {
+          throw firstErr;
+        }
       }
     } catch (err) {
       if (err?.code === 'SLUG_EXISTS') {
         setError('Такой slug уже занят. Измените адрес (slug) — он должен быть уникальным.');
+      } else if (err?.message && !/REQUEST_FAILED/i.test(err.message)) {
+        setError(err.message);
       } else {
-        setError('Не удалось сохранить продукт. Проверьте заполненные поля и попробуйте снова.');
+        setError('Не удалось сохранить продукт. Проверьте slug (латиницей, уникальный) и категорию.');
       }
     } finally {
       setSaving(false);
@@ -243,11 +284,26 @@ const CmsProductEdit = ({ sectionKey }) => {
             <div className="cms-form__grid">
               <label className="cms-field">
                 <span>Название</span>
-                <input value={form.title} onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value, slug: prev.slug || slugify(e.target.value) }))} />
+                <input
+                  value={form.title}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      title: e.target.value,
+                      slug: isNew && (!prev.slug || prev.slug === slugify(prev.title))
+                        ? slugify(e.target.value)
+                        : prev.slug || slugify(e.target.value),
+                    }))
+                  }
+                />
               </label>
               <label className="cms-field">
-                <span>Slug (адрес в ссылке)</span>
-                <input value={form.slug} onChange={(e) => setForm((prev) => ({ ...prev, slug: slugify(e.target.value) }))} />
+                <span>Slug (латиницей, уникальный адрес)</span>
+                <input
+                  value={form.slug}
+                  placeholder="naprimer-kurs-python"
+                  onChange={(e) => setForm((prev) => ({ ...prev, slug: slugify(e.target.value) }))}
+                />
               </label>
             </div>
             {!isSimple ? (
@@ -265,9 +321,11 @@ const CmsProductEdit = ({ sectionKey }) => {
                   <span>Категория</span>
                   <select value={form.category_id} onChange={(e) => setForm((prev) => ({ ...prev, category_id: e.target.value }))}>
                     <option value="">Не выбрана</option>
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.id}>{category.title}</option>
-                    ))}
+                    {categories
+                      .filter((category) => (section.categorySlugs || [section.categorySlug]).includes(category.slug))
+                      .map((category) => (
+                        <option key={category.id} value={category.id}>{category.title}</option>
+                      ))}
                   </select>
                 </label>
               </div>

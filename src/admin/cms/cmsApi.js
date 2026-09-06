@@ -8,7 +8,8 @@ const asCmsError = (error) => {
   else if (/FORBIDDEN|Недостаточно/i.test(message) || error?.code === 'FORBIDDEN') next.code = 'FORBIDDEN';
   else if (/SLUG_EXISTS/i.test(message) || error?.code === 'SLUG_EXISTS') next.code = 'SLUG_EXISTS';
   else if (/CMS_NOT_INSTALLED/i.test(message) || error?.code === 'CMS_NOT_INSTALLED') next.code = 'CMS_NOT_INSTALLED';
-  else next.code = 'REQUEST_FAILED';
+  else if (error?.code === 'VALIDATION_ERROR') next.code = 'VALIDATION_ERROR';
+  else next.code = error?.code || 'REQUEST_FAILED';
   return next;
 };
 
