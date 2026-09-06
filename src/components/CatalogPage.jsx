@@ -6,10 +6,11 @@ import HeartIcon from './HeartIcon';
 import './CatalogPage.css';
 
 export const PRODUCT_CATEGORIES = [
-  { to: '/loans', label: 'Займы' },
-  { to: '/consumer-loans', label: 'Потребительские' },
+  { to: '/loans', label: 'Микрозаймы' },
+  { to: '/consumer-loans', label: 'Потреб. кредиты' },
   { to: '/auto-loans', label: 'Кредитные карты' },
   { to: '/cards', label: 'Дебетовые карты' },
+  { to: '/settlement-accounts', label: 'Расчётные счета' },
   { to: '/collateral-loans', label: 'Под залог' },
 ];
 
@@ -122,7 +123,7 @@ const CatalogPage = ({
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     let list = normalized.filter((item) => {
-      if (onlyFavorites && !isFavorite(item.id)) return false;
+      if (onlyFavorites && !isFavorite(item)) return false;
       if (!q) return true;
       const hay = [
         item.title,
@@ -294,7 +295,7 @@ const CatalogPage = ({
             </thead>
             <tbody>
               {filtered.map((item) => {
-                const fav = isFavorite(item.id);
+                const fav = isFavorite(item);
                 return (
                   <tr key={item.id} className={fav ? 'is-fav' : undefined}>
                     {columns.map((column) => (
@@ -310,7 +311,7 @@ const CatalogPage = ({
                           className={`catalog-fav${fav ? ' is-active' : ''}`}
                           aria-label={fav ? 'Убрать из избранного' : 'В избранное'}
                           aria-pressed={fav}
-                          onClick={() => toggleFavorite(item.id)}
+                          onClick={() => toggleFavorite(item)}
                         >
                           <HeartIcon filled={fav} size={18} />
                         </button>
@@ -325,7 +326,7 @@ const CatalogPage = ({
 
         <div className="catalog-cards">
           {filtered.map((item) => {
-            const fav = isFavorite(item.id);
+            const fav = isFavorite(item);
             return (
               <article key={item.id} className={`catalog-card${fav ? ' is-fav' : ''}`}>
                 <div className="catalog-card__top">
@@ -342,7 +343,7 @@ const CatalogPage = ({
                     className={`catalog-fav${fav ? ' is-active' : ''}`}
                     aria-label={fav ? 'Убрать из избранного' : 'В избранное'}
                     aria-pressed={fav}
-                    onClick={() => toggleFavorite(item.id)}
+                    onClick={() => toggleFavorite(item)}
                   >
                     <HeartIcon filled={fav} size={18} />
                   </button>

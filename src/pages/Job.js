@@ -1,4 +1,5 @@
 import CatalogPage, { INFO_CATEGORIES } from '../components/CatalogPage';
+import { useCatalogProducts } from '../hooks/useCatalogProducts';
 import dost from '../images/dost.webp';
 import yandex from '../images/yandex1.webp';
 import yandex1 from '../images/yandex.webp';
@@ -27,18 +28,21 @@ export const JOB_CATALOG = {
   items: JOB_ITEMS,
 };
 
-const Job = () => (
-  <CatalogPage
-    title="Вакансии"
-    description="Актуальные вакансии: доставка, банки, продажи и сервис."
-    variant="job"
-    catalogPath="/Job"
-    catalogLabel="Вакансии"
-    catalogPrefix="job"
-    items={JOB_ITEMS}
-    categories={INFO_CATEGORIES}
-    ctaLabel="Оставить заявку"
-  />
-);
+const Job = () => {
+  const items = useCatalogProducts('jobs', JOB_ITEMS);
+  return (
+    <CatalogPage
+      title="Вакансии"
+      description="Актуальные вакансии: доставка, банки, продажи и сервис."
+      variant="job"
+      catalogPath="/Job"
+      catalogLabel="Вакансии"
+      catalogPrefix="job"
+      items={items}
+      categories={INFO_CATEGORIES}
+      ctaLabel="Оставить заявку"
+    />
+  );
+};
 
 export default Job;

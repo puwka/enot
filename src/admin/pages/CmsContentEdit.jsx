@@ -4,6 +4,7 @@ import { cmsCreate, cmsDelete, cmsGet, cmsList, cmsPublish, cmsUnpublish, cmsUpd
 import { CONTENT_STATUSES, slugify } from '../cms/cmsConstants';
 import ContentBlocksEditor, { renderContentPreview } from '../cms/ContentBlocksEditor';
 import { getSiteArticleBySlug, getSiteNewsBySlug } from '../cms/siteContent';
+import CmsImageUpload from '../cms/CmsImageUpload';
 import { CmsAlert, CmsLoading, ConfirmDialog, PreviewModal } from '../cms/CmsUi';
 import '../cms/Cms.css';
 
@@ -253,10 +254,11 @@ const CmsContentEdit = ({ entity, listPath, titleLabel }) => {
         </div>
         <div className="cms-form-section">
           <h3 className="cms-form-section__title">Изображение</h3>
-          <label className="cms-field">
-            <span>Обложка (URL)</span>
-            <input value={form.cover_url} onChange={(e) => patch('cover_url', e.target.value)} />
-          </label>
+          <CmsImageUpload
+            label="Обложка"
+            value={form.cover_url}
+            onChange={(url) => patch('cover_url', url)}
+          />
         </div>
         <div className="cms-form-section">
           <h3 className="cms-form-section__title">SEO</h3>

@@ -1,17 +1,10 @@
-import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { ALL_OFFERS } from '../data/offersRegistry';
-import { useFavorites } from '../hooks/useFavorites';
 import HeartIcon from '../components/HeartIcon';
+import { useFavoriteOffers } from '../hooks/useFavoriteOffers';
 import './ContentPage.css';
 
 const Favorites = () => {
-  const { favorites, toggleFavorite, count } = useFavorites();
-
-  const items = useMemo(
-    () => ALL_OFFERS.filter((offer) => favorites.includes(offer.id)),
-    [favorites]
-  );
+  const { items, loading, toggleFavorite, count } = useFavoriteOffers();
 
   return (
     <main className="content-page">
@@ -29,10 +22,16 @@ const Favorites = () => {
           </p>
         </header>
 
-        {items.length ? (
+        {loading ? (
+          <div className="content-empty">
+            <p>Загрузка избранного…</p>
+          </div>
+        ) : items.length ? (
           <div className="fav-list">
-            {items.map((item) => (
-              <article key={item.id} className="fav-item">
+            {items.map((item) => {
+              const offerSlug = item.slug || item.key;
+              return (
+              <article key={item.key || offerSlug} className="fav-item">
                 <span className="fav-item__logo">
                   <img src={item.image} alt="" />
                 </span>
@@ -46,13 +45,13 @@ const Favorites = () => {
                   </span>
                 </div>
                 <div className="fav-item__actions">
-                  <Link to={`/offer/${item.slug}`} className="btn btn--primary btn--sm">
+                  <Link to={`/offer/${encodeURIComponent(offerSlug)}`} className="btn btn--primary btn--sm">
                     Подробнее
                   </Link>
                   <button
                     type="button"
                     className="btn btn--secondary btn--sm"
-                    onClick={() => toggleFavorite(item.id)}
+                    onClick={() => toggleFavorite(item)}
                     aria-label="Убрать из избранного"
                   >
                     <HeartIcon filled size={18} />
@@ -60,7 +59,8 @@ const Favorites = () => {
                   </button>
                 </div>
               </article>
-            ))}
+            );
+            })}
           </div>
         ) : (
           <div className="content-empty">

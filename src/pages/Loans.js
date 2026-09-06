@@ -38,7 +38,7 @@ export const LOANS_ITEMS = [
 
 export const LOANS_CATALOG = {
   path: '/loans',
-  label: 'Кредиты и займы',
+  label: 'Микрозаймы',
   variant: 'loan',
   prefix: 'loans',
   ctaLabel: 'Получить деньги',
@@ -50,11 +50,11 @@ const Loans = () => {
 
   return (
     <CatalogPage
-      title="Кредиты и займы"
+      title="Микрозаймы"
       description="Сравните актуальные предложения МФО и выберите подходящие условия по сумме, сроку и ставке."
       variant="loan"
       catalogPath="/loans"
-      catalogLabel="Кредиты и займы"
+      catalogLabel="Микрозаймы"
       catalogPrefix="loans"
       items={items}
       ctaLabel="Получить деньги"

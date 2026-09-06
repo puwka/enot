@@ -1,11 +1,21 @@
 export const PRODUCT_SECTIONS = {
   loans: {
     key: 'loans',
-    title: 'Кредиты',
+    title: 'Микрозаймы',
     categorySlug: 'loans',
-    categorySlugs: ['loans', 'consumer-loans', 'collateral-loans'],
+    categorySlugs: ['loans'],
     listPath: '/admin/products/loans',
-    paths: ['/loans', '/consumer-loans', '/collateral-loans'],
+    paths: ['/loans'],
+    formVariant: 'loan',
+  },
+  'consumer-loans': {
+    key: 'consumer-loans',
+    title: 'Потреб. кредиты',
+    categorySlug: 'consumer-loans',
+    categorySlugs: ['consumer-loans', 'collateral-loans'],
+    listPath: '/admin/products/consumer-loans',
+    paths: ['/consumer-loans', '/collateral-loans'],
+    formVariant: 'loan',
   },
   'debit-cards': {
     key: 'debit-cards',
@@ -14,6 +24,7 @@ export const PRODUCT_SECTIONS = {
     categorySlugs: ['debit-cards'],
     listPath: '/admin/products/debit-cards',
     paths: ['/cards'],
+    formVariant: 'card',
   },
   'credit-cards': {
     key: 'credit-cards',
@@ -22,6 +33,16 @@ export const PRODUCT_SECTIONS = {
     categorySlugs: ['credit-cards'],
     listPath: '/admin/products/credit-cards',
     paths: ['/auto-loans'],
+    formVariant: 'card',
+  },
+  'settlement-accounts': {
+    key: 'settlement-accounts',
+    title: 'Расчётные счета',
+    categorySlug: 'settlement-accounts',
+    categorySlugs: ['settlement-accounts'],
+    listPath: '/admin/products/settlement-accounts',
+    paths: ['/settlement-accounts'],
+    formVariant: 'simple',
   },
   services: {
     key: 'services',
@@ -30,6 +51,7 @@ export const PRODUCT_SECTIONS = {
     categorySlugs: ['services'],
     listPath: '/admin/products/services',
     paths: ['/services'],
+    formVariant: 'simple',
   },
   shops: {
     key: 'shops',
@@ -38,6 +60,7 @@ export const PRODUCT_SECTIONS = {
     categorySlugs: ['shops'],
     listPath: '/admin/products/shops',
     paths: ['/shops'],
+    formVariant: 'simple',
   },
   obuchenie: {
     key: 'obuchenie',
@@ -46,6 +69,7 @@ export const PRODUCT_SECTIONS = {
     categorySlugs: ['obuchenie', 'education'],
     listPath: '/admin/products/obuchenie',
     paths: ['/obuchenie', '/Education'],
+    formVariant: 'simple',
   },
   jobs: {
     key: 'jobs',
@@ -54,5 +78,6 @@ export const PRODUCT_SECTIONS = {
     categorySlugs: ['jobs'],
     listPath: '/admin/products/jobs',
     paths: ['/Job'],
+    formVariant: 'simple',
   },
 };

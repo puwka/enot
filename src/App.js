@@ -12,6 +12,7 @@ import Education from './pages/Education';
 import Obuchenie from './pages/Obuchenie';
 import Services from './pages/Services';
 import Shops from './pages/Shops';
+import SettlementAccounts from './pages/SettlementAccounts';
 import OfferDetail from './pages/OfferDetail';
 import ArticleDetail from './pages/ArticleDetail';
 import News from './pages/News';
@@ -107,6 +108,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/loans" element={<Loans />} />
+                <Route path="/settlement-accounts" element={<SettlementAccounts />} />
                 <Route path="/cards" element={<Cards />} />
                 <Route path="/consumer-loans" element={<ConsumerLoans />} />
                 <Route path="/auto-loans" element={<AutoLoans />} />
@@ -260,6 +262,38 @@ function App() {
                     element={
                       <AdminRoleRoute permission="products">
                         <CmsProductEdit sectionKey="loans" />
+                      </AdminRoleRoute>
+                    }
+                  />
+                  <Route
+                    path="products/consumer-loans"
+                    element={
+                      <AdminRoleRoute permission="products">
+                        <CmsProductsList sectionKey="consumer-loans" />
+                      </AdminRoleRoute>
+                    }
+                  />
+                  <Route
+                    path="products/consumer-loans/:id"
+                    element={
+                      <AdminRoleRoute permission="products">
+                        <CmsProductEdit sectionKey="consumer-loans" />
+                      </AdminRoleRoute>
+                    }
+                  />
+                  <Route
+                    path="products/settlement-accounts"
+                    element={
+                      <AdminRoleRoute permission="products">
+                        <CmsProductsList sectionKey="settlement-accounts" />
+                      </AdminRoleRoute>
+                    }
+                  />
+                  <Route
+                    path="products/settlement-accounts/:id"
+                    element={
+                      <AdminRoleRoute permission="products">
+                        <CmsProductEdit sectionKey="settlement-accounts" />
                       </AdminRoleRoute>
                     }
                   />

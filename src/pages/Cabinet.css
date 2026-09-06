@@ -347,6 +347,19 @@
   background: #f8fafc;
 }
 
+.cabinet-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.cabinet-stats__note {
+  margin-top: 12px;
+  font-size: 14px;
+  color: #6b7689;
+}
+
 .cabinet-stat span {
   display: block;
   margin-bottom: 6px;
@@ -535,6 +548,7 @@
   .cabinet-hero,
   .cabinet-grid,
   .cabinet-grid--3,
+  .cabinet-stats,
   .cabinet-loan__grid {
     grid-template-columns: 1fr;
   }

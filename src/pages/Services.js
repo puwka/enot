@@ -1,4 +1,5 @@
 import CatalogPage, { INFO_CATEGORIES } from '../components/CatalogPage';
+import { useCatalogProducts } from '../hooks/useCatalogProducts';
 import dost from '../images/dost.webp';
 import yandex from '../images/yandex1.webp';
 import alfa from '../images/alfa.webp';
@@ -25,18 +26,21 @@ export const SERVICES_CATALOG = {
   items: SERVICES_ITEMS,
 };
 
-const Services = () => (
-  <CatalogPage
-    title="Сервисы"
-    description="Подработка, доставка, банковские и бытовые сервисы — актуальные предложения партнёров."
-    variant="service"
-    catalogPath="/services"
-    catalogLabel="Сервисы"
-    catalogPrefix="services"
-    items={SERVICES_ITEMS}
-    categories={INFO_CATEGORIES}
-    ctaLabel="Подробнее"
-  />
-);
+const Services = () => {
+  const items = useCatalogProducts('services', SERVICES_ITEMS);
+  return (
+    <CatalogPage
+      title="Сервисы"
+      description="Подработка, доставка, банковские и бытовые сервисы — актуальные предложения партнёров."
+      variant="service"
+      catalogPath="/services"
+      catalogLabel="Сервисы"
+      catalogPrefix="services"
+      items={items}
+      categories={INFO_CATEGORIES}
+      ctaLabel="Подробнее"
+    />
+  );
+};
 
 export default Services;

@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { fetchFaqItems } from '../data/articlesRuntimeApi';
 import './ContentPage.css';
 
-const FAQ_ITEMS = [
+const FALLBACK_FAQ = [
   {
     q: 'Что такое ЕнотМани?',
     a: 'ЕнотМани — сервис сравнения финансовых продуктов: кредитов, займов, дебетовых и кредитных карт. Мы помогаем быстро сориентироваться в условиях и перейти к оформлению.',
@@ -12,29 +13,25 @@ const FAQ_ITEMS = [
     a: 'Да, сравнение предложений на сайте бесплатно для пользователей. Оформление проходит на стороне банка или компании по их условиям.',
   },
   {
-    q: 'Как подать заявку на продукт?',
-    a: 'Откройте карточку предложения, изучите условия и нажмите кнопку оформления. Далее заявка заполняется на сайте выбранной компании.',
-  },
-  {
-    q: 'Почему условия могут отличаться?',
-    a: 'Ставки, лимиты и сроки зависят от банка, вашего профиля и актуальных тарифов. Итоговые условия всегда подтверждаются при оформлении.',
-  },
-  {
     q: 'Как работает избранное?',
     a: 'Нажмите на сердечко у предложения — оно сохранится в разделе «Избранное». Список хранится в вашем браузере.',
-  },
-  {
-    q: 'Можно ли сравнить карты и кредиты в одном месте?',
-    a: 'Да. В каталогах собраны актуальные предложения по категориям. Также на главной есть быстрый доступ к популярным продуктам.',
-  },
-  {
-    q: 'Как связаться с сервисом?',
-    a: 'Напишите нам в Telegram @enot_mani. Мы поможем сориентироваться по разделам сайта.',
   },
 ];
 
 const Faq = () => {
   const [open, setOpen] = useState(0);
+  const [items, setItems] = useState(FALLBACK_FAQ);
+
+  useEffect(() => {
+    let active = true;
+    fetchFaqItems().then((rows) => {
+      if (!active) return;
+      if (rows.length) setItems(rows);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <main className="content-page">
@@ -53,10 +50,10 @@ const Faq = () => {
         </header>
 
         <div className="content-faq">
-          {FAQ_ITEMS.map((item, index) => {
+          {items.map((item, index) => {
             const isOpen = open === index;
             return (
-              <div key={item.q} className={`content-faq__item${isOpen ? ' is-open' : ''}`}>
+              <div key={item.id || item.q} className={`content-faq__item${isOpen ? ' is-open' : ''}`}>
                 <button
                   type="button"
                   className="content-faq__q"
@@ -87,7 +84,7 @@ const Faq = () => {
               Написать в Telegram
             </a>
             <Link to="/loans" className="btn btn--secondary">
-              К кредитам
+              К каталогу
             </Link>
           </div>
         </section>

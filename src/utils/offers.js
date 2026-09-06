@@ -15,7 +15,7 @@ export const enrichOffers = (items, meta) => {
       ...item,
       title,
       slug,
-      id: item.id || item.link || slug,
+      id: item.slug || item.id || item.link || slug,
       catalogPath,
       catalogLabel,
       variant,

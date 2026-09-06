@@ -15,6 +15,20 @@ const mapProduct = (row) => {
       ? `${row.term_min ?? '—'} - ${row.term_max ?? '—'} мес.`
       : row.term_label || '';
   const advantages = Array.isArray(row.advantages) ? row.advantages : row.advantages ? row.advantages : [];
+  const categorySlug = row.category_slug || '';
+  const pathFromSlug = {
+    loans: '/loans',
+    'consumer-loans': '/consumer-loans',
+    'credit-cards': '/auto-loans',
+    'collateral-loans': '/collateral-loans',
+    'debit-cards': '/cards',
+    'settlement-accounts': '/settlement-accounts',
+    jobs: '/Job',
+    education: '/Education',
+    obuchenie: '/obuchenie',
+    services: '/services',
+    shops: '/shops',
+  };
   return {
     id: row.id,
     slug: row.slug,
@@ -30,7 +44,7 @@ const mapProduct = (row) => {
     benefit2: advantages[1] || row.benefit_2 || '',
     benefit3: advantages[2] || row.benefit_3 || '',
     spec: row.product_type || row.spec || '',
-    catalogPath: row.category_path || '/loans',
+    catalogPath: row.category_path || pathFromSlug[categorySlug] || '/loans',
     catalogLabel: row.category_title || 'Продукты',
     variant: row.category_variant || 'loan',
     ctaLabel: row.category_cta_label || 'Подробнее',
@@ -49,6 +63,7 @@ const productSelect = `
     b.name AS bank_name,
     b.logo_url AS bank_logo_url,
     c.path AS category_path,
+    c.slug AS category_slug,
     c.title AS category_title,
     c.variant AS category_variant,
     c.cta_label AS category_cta_label
@@ -186,4 +201,79 @@ export const fetchRelatedNews = async (excludeSlug, limit = 3) => {
     [excludeSlug, limit]
   );
   return rows.map(mapNewsRow);
+};
+
+const articleSelect = `
+  SELECT
+    a.*,
+    c.title AS category_title
+  FROM public.articles a
+  LEFT JOIN public.categories c ON c.id = a.category_id
+`;
+
+const mapArticleRow = (row) => ({
+  id: row.id,
+  slug: row.slug,
+  title: row.title,
+  category: row.category_title || 'Статьи',
+  dateISO: row.published_at || row.created_at,
+  readTime: row.read_time || '5 мин',
+  cover: row.cover_url || '',
+  excerpt: row.excerpt || '',
+  author: row.author || '',
+  blocks: Array.isArray(row.content_blocks) ? row.content_blocks : [],
+  toc: Array.isArray(row.toc) ? row.toc : [],
+  cta: row.cta && typeof row.cta === 'object' ? row.cta : {},
+  publishedAt: row.published_at,
+  createdAt: row.created_at,
+});
+
+export const fetchArticlesList = async () => {
+  const { rows } = await query(
+    `${articleSelect}
+     WHERE a.status = 'published'
+       AND a.deleted_at IS NULL
+     ORDER BY a.published_at DESC NULLS LAST, a.created_at DESC`
+  );
+  return rows.map(mapArticleRow);
+};
+
+export const fetchArticleBySlug = async (slug) => {
+  const { rows } = await query(
+    `${articleSelect}
+     WHERE a.slug = $1
+       AND a.status = 'published'
+       AND a.deleted_at IS NULL
+     LIMIT 1`,
+    [slug]
+  );
+  return rows[0] ? mapArticleRow(rows[0]) : null;
+};
+
+export const fetchRelatedArticles = async (excludeSlug, limit = 3) => {
+  const { rows } = await query(
+    `${articleSelect}
+     WHERE a.status = 'published'
+       AND a.deleted_at IS NULL
+       AND a.slug <> $1
+     ORDER BY a.published_at DESC NULLS LAST, a.created_at DESC
+     LIMIT $2`,
+    [excludeSlug, limit]
+  );
+  return rows.map(mapArticleRow);
+};
+
+export const fetchFaqList = async () => {
+  const { rows } = await query(
+    `SELECT id, question, answer, category, sort_order
+     FROM public.faq
+     WHERE status = 'published' AND deleted_at IS NULL
+     ORDER BY sort_order ASC, created_at ASC`
+  );
+  return rows.map((row) => ({
+    id: row.id,
+    q: row.question,
+    a: row.answer,
+    category: row.category || '',
+  }));
 };

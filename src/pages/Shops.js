@@ -1,4 +1,5 @@
 import CatalogPage, { INFO_CATEGORIES } from '../components/CatalogPage';
+import { useCatalogProducts } from '../hooks/useCatalogProducts';
 import yandex from '../images/yandex.webp';
 import alfa from '../images/alfa.webp';
 import mts from '../images/mts.webp';
@@ -26,18 +27,21 @@ export const SHOPS_CATALOG = {
   items: SHOPS_ITEMS,
 };
 
-const Shops = () => (
-  <CatalogPage
-    title="Магазины"
-    description="Карты и программы с выгодным кешбэком в магазинах, супермаркетах и у партнёров."
-    variant="shop"
-    catalogPath="/shops"
-    catalogLabel="Магазины"
-    catalogPrefix="shops"
-    items={SHOPS_ITEMS}
-    categories={INFO_CATEGORIES}
-    ctaLabel="Подробнее"
-  />
-);
+const Shops = () => {
+  const items = useCatalogProducts('shops', SHOPS_ITEMS);
+  return (
+    <CatalogPage
+      title="Магазины"
+      description="Карты и программы с выгодным кешбэком в магазинах, супермаркетах и у партнёров."
+      variant="shop"
+      catalogPath="/shops"
+      catalogLabel="Магазины"
+      catalogPrefix="shops"
+      items={items}
+      categories={INFO_CATEGORIES}
+      ctaLabel="Подробнее"
+    />
+  );
+};
 
 export default Shops;

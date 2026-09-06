@@ -115,7 +115,7 @@ const CmsCalculatorSettings = () => {
       <div className="cms-form" style={{ marginBottom: 18 }}>
         <div className="cms-form__grid">
           <label className="cms-field">
-            <span>key</span>
+            <span>Ключ (латиницей)</span>
             <input value={form.key} onChange={(e) => setForm((prev) => ({ ...prev, key: e.target.value }))} />
           </label>
           <label className="cms-field">
@@ -125,31 +125,31 @@ const CmsCalculatorSettings = () => {
         </div>
         <div className="cms-form__grid">
           <label className="cms-field">
-            <span>min amount</span>
+            <span>Сумма от</span>
             <input type="number" value={form.min_amount} onChange={(e) => setForm((prev) => ({ ...prev, min_amount: e.target.value }))} />
           </label>
           <label className="cms-field">
-            <span>max amount</span>
+            <span>Сумма до</span>
             <input type="number" value={form.max_amount} onChange={(e) => setForm((prev) => ({ ...prev, max_amount: e.target.value }))} />
           </label>
         </div>
         <div className="cms-form__grid">
           <label className="cms-field">
-            <span>min term</span>
+            <span>Срок от (мес.)</span>
             <input type="number" value={form.min_term} onChange={(e) => setForm((prev) => ({ ...prev, min_term: e.target.value }))} />
           </label>
           <label className="cms-field">
-            <span>max term</span>
+            <span>Срок до (мес.)</span>
             <input type="number" value={form.max_term} onChange={(e) => setForm((prev) => ({ ...prev, max_term: e.target.value }))} />
           </label>
         </div>
         <div className="cms-form__grid">
           <label className="cms-field">
-            <span>rate</span>
+            <span>Ставка (доля, напр. 0.008 = 0.8%)</span>
             <input type="number" step="0.0001" value={form.rate} onChange={(e) => setForm((prev) => ({ ...prev, rate: e.target.value }))} />
           </label>
           <label className="cms-field">
-            <span>default values</span>
+            <span>Значения по умолчанию (сумма / срок)</span>
             <div className="cms-form__grid">
               <input type="number" value={form.default_amount} onChange={(e) => setForm((prev) => ({ ...prev, default_amount: e.target.value }))} />
               <input type="number" value={form.default_term} onChange={(e) => setForm((prev) => ({ ...prev, default_term: e.target.value }))} />
@@ -157,34 +157,34 @@ const CmsCalculatorSettings = () => {
           </label>
         </div>
         <label className="cms-field">
-          <span>цели кредита</span>
+          <span>Цели кредита (каждая с новой строки)</span>
           <textarea rows={4} value={form.purposes_text} onChange={(e) => setForm((prev) => ({ ...prev, purposes_text: e.target.value }))} />
         </label>
         <label className="cms-field">
-          <span>default purpose</span>
+          <span>Цель по умолчанию</span>
           <input value={form.default_purpose} onChange={(e) => setForm((prev) => ({ ...prev, default_purpose: e.target.value }))} />
         </label>
         <div className="cms-form__grid">
           <label className="cms-field">
             <span>Статус</span>
             <select value={form.status} onChange={(e) => setForm((prev) => ({ ...prev, status: e.target.value }))}>
-              <option value="draft">draft</option>
-              <option value="published">published</option>
-              <option value="archived">archived</option>
+              <option value="draft">Черновик</option>
+              <option value="published">Опубликовано</option>
+              <option value="archived">В архиве</option>
             </select>
           </label>
           <label className="cms-field">
-            <span>sort_order</span>
+            <span>Порядок сортировки</span>
             <input type="number" value={form.sort_order} onChange={(e) => setForm((prev) => ({ ...prev, sort_order: e.target.value }))} />
           </label>
         </div>
         <div className="cms-form__grid">
           <label className="cms-checkbox">
             <input type="checkbox" checked={form.formula_locked} onChange={(e) => setForm((prev) => ({ ...prev, formula_locked: e.target.checked }))} />
-            <span>formula_locked</span>
+            <span>Формула заблокирована</span>
           </label>
           <label className="cms-field">
-            <span>formula</span>
+            <span>Формула расчёта</span>
             <input
               value={form.formula}
               readOnly={!canEditFormula}

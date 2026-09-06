@@ -40,9 +40,21 @@ const CmsProductEdit = ({ sectionKey }) => {
     link: '',
     active: true,
     featured: false,
-    status: 'draft',
+    status: 'published',
     sort_order: 0,
   });
+  const formVariant = section?.formVariant || 'loan';
+  const isSimple = formVariant === 'simple';
+  const typeLabel =
+    sectionKey === 'jobs'
+      ? 'Направление'
+      : sectionKey === 'services'
+        ? 'Категория'
+        : sectionKey === 'obuchenie'
+          ? 'Направление'
+          : sectionKey === 'shops'
+            ? 'Выгода'
+            : 'Тип продукта';
 
   const load = useCallback(async () => {
     if (!section) {
@@ -69,7 +81,7 @@ const CmsProductEdit = ({ sectionKey }) => {
         setForm((prev) => ({
           ...prev,
           category_id: selectedCategory?.id || '',
-          status: 'draft',
+          status: 'published',
           active: true,
           featured: false,
         }));
@@ -145,11 +157,21 @@ const CmsProductEdit = ({ sectionKey }) => {
     setSaving(true);
     setError('');
     try {
+      let categoryId = form.category_id || null;
+      if (!categoryId && section?.categorySlug) {
+        const selectedCategory = categories.find((entry) => entry.slug === section.categorySlug);
+        categoryId = selectedCategory?.id || null;
+      }
+      if (!categoryId) {
+        setError('Не выбрана категория раздела. Проверьте категории в админке или выполните миграции БД.');
+        setSaving(false);
+        return;
+      }
       const payload = {
         title: form.title.trim(),
         slug: slugify(form.slug),
         bank_id: form.bank_id && !String(form.bank_id).startsWith('site-') ? form.bank_id : null,
-        category_id: form.category_id || null,
+        category_id: categoryId,
         product_type: form.product_type.trim() || null,
         apr_rate: form.apr_rate === '' ? null : Number(form.apr_rate),
         amount_min: form.amount_min === '' ? null : Number(form.amount_min),
@@ -165,7 +187,7 @@ const CmsProductEdit = ({ sectionKey }) => {
         link: form.link.trim() || null,
         active: Boolean(form.active),
         featured: Boolean(form.featured),
-        status: form.status,
+        status: form.status || 'published',
         sort_order: Number(form.sort_order || 0),
       };
       if (isNew || String(item?.id || '').startsWith('site-')) {
@@ -175,8 +197,12 @@ const CmsProductEdit = ({ sectionKey }) => {
         await cmsUpdate('products', id, payload);
         await load();
       }
-    } catch {
-      setError('Не удалось сохранить продукт.');
+    } catch (err) {
+      if (err?.code === 'SLUG_EXISTS') {
+        setError('Такой slug уже занят. Измените адрес (slug) — он должен быть уникальным.');
+      } else {
+        setError('Не удалось сохранить продукт. Проверьте заполненные поля и попробуйте снова.');
+      }
     } finally {
       setSaving(false);
     }
@@ -220,99 +246,129 @@ const CmsProductEdit = ({ sectionKey }) => {
                 <input value={form.title} onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value, slug: prev.slug || slugify(e.target.value) }))} />
               </label>
               <label className="cms-field">
-                <span>Slug</span>
+                <span>Slug (адрес в ссылке)</span>
                 <input value={form.slug} onChange={(e) => setForm((prev) => ({ ...prev, slug: slugify(e.target.value) }))} />
               </label>
             </div>
-            <div className="cms-form__grid">
+            {!isSimple ? (
+              <div className="cms-form__grid">
+                <label className="cms-field">
+                  <span>Банк</span>
+                  <select value={form.bank_id} onChange={(e) => setForm((prev) => ({ ...prev, bank_id: e.target.value }))}>
+                    <option value="">Не выбран</option>
+                    {banks.map((bank) => (
+                      <option key={bank.id} value={bank.id}>{bank.name}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="cms-field">
+                  <span>Категория</span>
+                  <select value={form.category_id} onChange={(e) => setForm((prev) => ({ ...prev, category_id: e.target.value }))}>
+                    <option value="">Не выбрана</option>
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.id}>{category.title}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            ) : (
               <label className="cms-field">
-                <span>Банк</span>
-                <select value={form.bank_id} onChange={(e) => setForm((prev) => ({ ...prev, bank_id: e.target.value }))}>
-                  <option value="">Не выбран</option>
-                  {banks.map((bank) => (
-                    <option key={bank.id} value={bank.id}>{bank.name}</option>
-                  ))}
-                </select>
-              </label>
-              <label className="cms-field">
-                <span>Категория</span>
+                <span>Категория раздела</span>
                 <select value={form.category_id} onChange={(e) => setForm((prev) => ({ ...prev, category_id: e.target.value }))}>
                   <option value="">Не выбрана</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>{category.title}</option>
-                  ))}
+                  {categories
+                    .filter((category) => (section.categorySlugs || [section.categorySlug]).includes(category.slug))
+                    .map((category) => (
+                      <option key={category.id} value={category.id}>{category.title}</option>
+                    ))}
                 </select>
               </label>
-            </div>
+            )}
             <div className="cms-form__grid">
               <label className="cms-field">
-                <span>Тип</span>
+                <span>{typeLabel}</span>
                 <input value={form.product_type} onChange={(e) => setForm((prev) => ({ ...prev, product_type: e.target.value }))} />
               </label>
-              <label className="cms-field">
-                <span>Ставка</span>
-                <input type="number" step="0.001" value={form.apr_rate} onChange={(e) => setForm((prev) => ({ ...prev, apr_rate: e.target.value }))} />
-              </label>
+              {!isSimple ? (
+                <label className="cms-field">
+                  <span>Ставка (%)</span>
+                  <input type="number" step="0.001" value={form.apr_rate} onChange={(e) => setForm((prev) => ({ ...prev, apr_rate: e.target.value }))} />
+                </label>
+              ) : null}
             </div>
           </div>
 
-          <div className="cms-form-section">
-            <h3 className="cms-form-section__title">Условия</h3>
-            <div className="cms-form__grid">
+          {!isSimple ? (
+            <div className="cms-form-section">
+              <h3 className="cms-form-section__title">Условия</h3>
+              <div className="cms-form__grid">
+                <label className="cms-field">
+                  <span>Сумма от</span>
+                  <input type="number" value={form.amount_min} onChange={(e) => setForm((prev) => ({ ...prev, amount_min: e.target.value }))} />
+                </label>
+                <label className="cms-field">
+                  <span>Сумма до</span>
+                  <input type="number" value={form.amount_max} onChange={(e) => setForm((prev) => ({ ...prev, amount_max: e.target.value }))} />
+                </label>
+              </div>
+              <div className="cms-form__grid">
+                <label className="cms-field">
+                  <span>Срок от (мес.)</span>
+                  <input type="number" value={form.term_min} onChange={(e) => setForm((prev) => ({ ...prev, term_min: e.target.value }))} />
+                </label>
+                <label className="cms-field">
+                  <span>Срок до (мес.)</span>
+                  <input type="number" value={form.term_max} onChange={(e) => setForm((prev) => ({ ...prev, term_max: e.target.value }))} />
+                </label>
+              </div>
+              <div className="cms-form__grid">
+                <label className="cms-field">
+                  <span>Ежемесячный платёж</span>
+                  <input type="number" value={form.monthly_payment} onChange={(e) => setForm((prev) => ({ ...prev, monthly_payment: e.target.value }))} />
+                </label>
+                <label className="cms-field">
+                  <span>Комиссия</span>
+                  <input value={form.commission} onChange={(e) => setForm((prev) => ({ ...prev, commission: e.target.value }))} />
+                </label>
+              </div>
               <label className="cms-field">
-                <span>Сумма от</span>
-                <input type="number" value={form.amount_min} onChange={(e) => setForm((prev) => ({ ...prev, amount_min: e.target.value }))} />
+                <span>Описание</span>
+                <textarea rows={3} value={form.description} onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))} />
               </label>
               <label className="cms-field">
-                <span>Сумма до</span>
-                <input type="number" value={form.amount_max} onChange={(e) => setForm((prev) => ({ ...prev, amount_max: e.target.value }))} />
+                <span>Условия</span>
+                <textarea rows={3} value={form.conditions} onChange={(e) => setForm((prev) => ({ ...prev, conditions: e.target.value }))} />
+              </label>
+              <label className="cms-field">
+                <span>Преимущества (каждое с новой строки)</span>
+                <textarea rows={4} value={form.advantages_text} onChange={(e) => setForm((prev) => ({ ...prev, advantages_text: e.target.value }))} />
               </label>
             </div>
-            <div className="cms-form__grid">
+          ) : (
+            <div className="cms-form-section">
+              <h3 className="cms-form-section__title">Описание</h3>
               <label className="cms-field">
-                <span>Срок от</span>
-                <input type="number" value={form.term_min} onChange={(e) => setForm((prev) => ({ ...prev, term_min: e.target.value }))} />
+                <span>Краткое описание</span>
+                <textarea rows={3} value={form.description} onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))} />
               </label>
               <label className="cms-field">
-                <span>Срок до</span>
-                <input type="number" value={form.term_max} onChange={(e) => setForm((prev) => ({ ...prev, term_max: e.target.value }))} />
-              </label>
-            </div>
-            <div className="cms-form__grid">
-              <label className="cms-field">
-                <span>Ежемесячный платеж</span>
-                <input type="number" value={form.monthly_payment} onChange={(e) => setForm((prev) => ({ ...prev, monthly_payment: e.target.value }))} />
-              </label>
-              <label className="cms-field">
-                <span>Комиссия</span>
-                <input value={form.commission} onChange={(e) => setForm((prev) => ({ ...prev, commission: e.target.value }))} />
+                <span>Преимущества / детали (каждое с новой строки)</span>
+                <textarea rows={4} value={form.advantages_text} onChange={(e) => setForm((prev) => ({ ...prev, advantages_text: e.target.value }))} />
               </label>
             </div>
-            <label className="cms-field">
-              <span>Описание</span>
-              <textarea rows={3} value={form.description} onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))} />
-            </label>
-            <label className="cms-field">
-              <span>Условия</span>
-              <textarea rows={3} value={form.conditions} onChange={(e) => setForm((prev) => ({ ...prev, conditions: e.target.value }))} />
-            </label>
-            <label className="cms-field">
-              <span>Преимущества</span>
-              <textarea rows={4} value={form.advantages_text} onChange={(e) => setForm((prev) => ({ ...prev, advantages_text: e.target.value }))} />
-            </label>
-          </div>
+          )}
 
           <div className="cms-form-section">
             <h3 className="cms-form-section__title">Изображение и ссылка</h3>
             <div className="cms-form__grid">
               <CmsImageUpload
-                label="Логотип"
+                label="Логотип / изображение"
                 value={form.logo_url}
                 previewFallback={logoPreview && logoPreview !== form.logo_url ? logoPreview : ''}
                 onChange={(url) => setForm((prev) => ({ ...prev, logo_url: url }))}
               />
               <label className="cms-field">
-                <span>Ссылка</span>
+                <span>Ссылка на партнёра</span>
                 <input value={form.link} onChange={(e) => setForm((prev) => ({ ...prev, link: e.target.value }))} />
               </label>
             </div>
@@ -322,26 +378,26 @@ const CmsProductEdit = ({ sectionKey }) => {
             <h3 className="cms-form-section__title">Публикация</h3>
             <div className="cms-form__grid">
               <label className="cms-field">
-                <span>sort_order</span>
+                <span>Порядок сортировки</span>
                 <input type="number" value={form.sort_order} onChange={(e) => setForm((prev) => ({ ...prev, sort_order: e.target.value }))} />
               </label>
               <label className="cms-field">
                 <span>Статус</span>
                 <select value={form.status} onChange={(e) => setForm((prev) => ({ ...prev, status: e.target.value }))}>
-                  <option value="draft">draft</option>
-                  <option value="published">published</option>
-                  <option value="archived">archived</option>
+                  <option value="draft">Черновик</option>
+                  <option value="published">Опубликовано</option>
+                  <option value="archived">В архиве</option>
                 </select>
               </label>
             </div>
             <div className="cms-form__grid">
               <label className="cms-checkbox">
                 <input type="checkbox" checked={form.active} onChange={(e) => setForm((prev) => ({ ...prev, active: e.target.checked }))} />
-                <span>active</span>
+                <span>Показывать на сайте</span>
               </label>
               <label className="cms-checkbox">
                 <input type="checkbox" checked={form.featured} onChange={(e) => setForm((prev) => ({ ...prev, featured: e.target.checked }))} />
-                <span>featured</span>
+                <span>В избранных / топе</span>
               </label>
             </div>
           </div>

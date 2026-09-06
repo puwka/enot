@@ -116,6 +116,20 @@ const Home = () => {
   const { isFavorite, toggleFavorite } = useFavorites();
   const current = OFFER_TABS[activeTab];
 
+  const favoritePayload = (item, matched) => ({
+    ...(matched || {}),
+    title: matched?.title || item.bank,
+    image: matched?.image || item.image,
+    link: item.link,
+    rate: item.rate,
+    sum: item.sum,
+    term: item.term,
+    catalogPath: matched?.catalogPath || current.allTo,
+    catalogLabel: matched?.catalogLabel || current.label,
+    slug: matched?.slug || undefined,
+    id: matched?.id || matched?.slug || item.link,
+  });
+
   useEffect(() => {
     const prefetch = () => {
       ['loans', 'debit-cards', 'credit-cards'].forEach((slug) => {
@@ -248,6 +262,16 @@ const Home = () => {
               </span>
               <span className="home-cat__chevron" aria-hidden="true">›</span>
             </Link>
+            <Link to="/loans" className="home-cat" style={{ '--reveal-delay': '100ms' }}>
+              <span className="home-cat__icon" aria-hidden="true">
+                <img src={catLoansIcon} alt="" />
+              </span>
+              <span className="home-cat__text">
+                <strong>Микрозаймы</strong>
+                <span>Быстрые займы на карту от МФО</span>
+              </span>
+              <span className="home-cat__chevron" aria-hidden="true">›</span>
+            </Link>
             <Link to="/cards" className="home-cat" style={{ '--reveal-delay': '140ms' }}>
               <span className="home-cat__icon" aria-hidden="true">
                 <img src={catDebitIcon} alt="" />
@@ -265,6 +289,16 @@ const Home = () => {
               <span className="home-cat__text">
                 <strong>Кредитные карты</strong>
                 <span>Льготный период и выгодные условия</span>
+              </span>
+              <span className="home-cat__chevron" aria-hidden="true">›</span>
+            </Link>
+            <Link to="/settlement-accounts" className="home-cat" style={{ '--reveal-delay': '260ms' }}>
+              <span className="home-cat__icon" aria-hidden="true">
+                <img src={catDebitIcon} alt="" />
+              </span>
+              <span className="home-cat__text">
+                <strong>Расчётные счета</strong>
+                <span>РКО и счета для бизнеса</span>
               </span>
               <span className="home-cat__chevron" aria-hidden="true">›</span>
             </Link>
@@ -295,6 +329,16 @@ const Home = () => {
               <span className="home-cat__text">
                 <strong>Магазины</strong>
                 <span>Кешбэк и выгода при покупках у партнёров</span>
+              </span>
+              <span className="home-cat__chevron" aria-hidden="true">›</span>
+            </Link>
+            <Link to="/Job" className="home-cat" style={{ '--reveal-delay': '520ms' }}>
+              <span className="home-cat__icon" aria-hidden="true">
+                <img src={catServicesIcon} alt="" />
+              </span>
+              <span className="home-cat__text">
+                <strong>Вакансии</strong>
+                <span>Работа и подработка у партнёров</span>
               </span>
               <span className="home-cat__chevron" aria-hidden="true">›</span>
             </Link>
@@ -344,8 +388,8 @@ const Home = () => {
               <tbody>
                 {current.items.map((item, index) => {
                   const matched = getOfferByLink(item.link);
-                  const favId = matched?.id || item.link;
-                  const fav = isFavorite(favId);
+                  const payload = favoritePayload(item, matched);
+                  const fav = isFavorite(payload);
                   return (
                   <tr
                     key={`${activeTab}-${item.bank}-${index}`}
@@ -382,7 +426,7 @@ const Home = () => {
                           className={`home-fav${fav ? ' is-active' : ''}`}
                           aria-label={fav ? 'Убрать из избранного' : 'В избранное'}
                           aria-pressed={fav}
-                          onClick={() => toggleFavorite(favId)}
+                          onClick={() => toggleFavorite(payload)}
                         >
                           <HeartIcon filled={fav} size={18} />
                         </button>

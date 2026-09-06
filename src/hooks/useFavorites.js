@@ -1,60 +1,70 @@
 import { useCallback, useEffect, useState } from 'react';
-
-const STORAGE_KEY = 'enotmani-favorites';
-
-const readFavorites = () => {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-};
+import {
+  getFavoriteKey,
+  readFavoriteSnapshots,
+  toFavoriteSnapshot,
+  writeFavoriteSnapshots,
+  STORAGE_KEY,
+  LEGACY_STORAGE_KEY,
+} from '../utils/favoriteKey';
 
 export const useFavorites = () => {
-  const [favorites, setFavorites] = useState(() => readFavorites());
+  const [favorites, setFavorites] = useState(() => readFavoriteSnapshots());
+
+  const sync = useCallback(() => {
+    setFavorites(readFavoriteSnapshots());
+  }, []);
 
   useEffect(() => {
     const onStorage = (event) => {
-      if (event.key === STORAGE_KEY) {
-        setFavorites(readFavorites());
+      if (event.key === STORAGE_KEY || event.key === LEGACY_STORAGE_KEY) {
+        sync();
       }
     };
     window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
-  }, []);
+    window.addEventListener('enotmani-favorites', sync);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener('enotmani-favorites', sync);
+    };
+  }, [sync]);
 
   const persist = useCallback((next) => {
-    setFavorites(next);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    const saved = writeFavoriteSnapshots(next);
+    setFavorites(saved);
     window.dispatchEvent(new Event('enotmani-favorites'));
   }, []);
 
-  useEffect(() => {
-    const sync = () => setFavorites(readFavorites());
-    window.addEventListener('enotmani-favorites', sync);
-    return () => window.removeEventListener('enotmani-favorites', sync);
-  }, []);
-
   const isFavorite = useCallback(
-    (id) => favorites.includes(id),
+    (itemOrKey) => {
+      const key = getFavoriteKey(itemOrKey);
+      return key ? favorites.some((item) => item.key === key) : false;
+    },
     [favorites]
   );
 
   const toggleFavorite = useCallback(
-    (id) => {
-      if (!id) return;
-      persist(
-        favorites.includes(id)
-          ? favorites.filter((item) => item !== id)
-          : [...favorites, id]
-      );
+    (itemOrKey) => {
+      const snapshot = toFavoriteSnapshot(itemOrKey);
+      if (!snapshot?.key) return;
+
+      const exists = favorites.some((item) => item.key === snapshot.key);
+      if (exists) {
+        persist(favorites.filter((item) => item.key !== snapshot.key));
+      } else {
+        persist([...favorites, snapshot]);
+      }
     },
     [favorites, persist]
   );
 
-  return { favorites, isFavorite, toggleFavorite, count: favorites.length };
+  return {
+    favorites,
+    favoriteKeys: favorites.map((item) => item.key),
+    isFavorite,
+    toggleFavorite,
+    count: favorites.length,
+  };
 };
 
 export default useFavorites;

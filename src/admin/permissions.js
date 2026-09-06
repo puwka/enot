@@ -32,9 +32,11 @@ export const ADMIN_NAV = [
     key: 'products',
     label: 'Продукты',
     children: [
-      { key: 'loans', path: '/admin/products/loans', label: 'Кредиты', permission: 'products' },
+      { key: 'loans', path: '/admin/products/loans', label: 'Микрозаймы', permission: 'products' },
+      { key: 'consumer-loans', path: '/admin/products/consumer-loans', label: 'Потреб. кредиты', permission: 'products' },
       { key: 'debit-cards', path: '/admin/products/debit-cards', label: 'Дебетовые карты', permission: 'products' },
       { key: 'credit-cards', path: '/admin/products/credit-cards', label: 'Кредитные карты', permission: 'products' },
+      { key: 'settlement-accounts', path: '/admin/products/settlement-accounts', label: 'Расчётные счета', permission: 'products' },
       { key: 'services', path: '/admin/products/services', label: 'Сервисы', permission: 'products' },
       { key: 'shops', path: '/admin/products/shops', label: 'Магазины', permission: 'products' },
       { key: 'obuchenie', path: '/admin/products/obuchenie', label: 'Обучение', permission: 'products' },

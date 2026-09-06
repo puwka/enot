@@ -7,12 +7,15 @@ import HeartIcon from '../components/HeartIcon';
 import './Header.css';
 
 const NAV_PRIMARY = [
-  { to: '/loans', label: 'Кредиты' },
+  { to: '/loans', label: 'Микрозаймы' },
+  { to: '/consumer-loans', label: 'Потреб. кредиты', shortLabel: 'Потреб.' },
   { to: '/cards', label: 'Дебетовые карты', shortLabel: 'Дебетовые' },
   { to: '/auto-loans', label: 'Кредитные карты', shortLabel: 'Кредитные' },
+  { to: '/settlement-accounts', label: 'Расчётные счета', shortLabel: 'Счета' },
   { to: '/obuchenie', label: 'Обучение' },
   { to: '/services', label: 'Сервисы' },
   { to: '/shops', label: 'Магазины' },
+  { to: '/Job', label: 'Вакансии' },
 ];
 
 const NAV_MORE = [
@@ -33,16 +36,23 @@ const SEARCH_INDEX = [
   },
   {
     to: '/loans',
-    title: 'Кредиты и займы',
-    description: 'Подобрать кредит или займ на карту',
-    keywords: ['кредит', 'кредиты', 'займ', 'займы', 'наличные', 'подобрать'],
+    title: 'Микрозаймы',
+    description: 'Подобрать займ на карту',
+    keywords: ['кредит', 'кредиты', 'займ', 'займы', 'микрозайм', 'микрозаймы', 'наличные', 'подобрать'],
     group: 'Продукты',
   },
   {
     to: '/consumer-loans',
     title: 'Потребительские кредиты',
     description: 'Ставки и условия банков по кредитам',
-    keywords: ['потребительский', 'потребительские', 'наличными', 'рефинансирование'],
+    keywords: ['потребительский', 'потребительские', 'наличными', 'рефинансирование', 'потреб'],
+    group: 'Продукты',
+  },
+  {
+    to: '/settlement-accounts',
+    title: 'Расчётные счета',
+    description: 'РКО и счета для бизнеса',
+    keywords: ['расчётный', 'расчетный', 'счёт', 'счет', 'рко', 'бизнес'],
     group: 'Продукты',
   },
   {

@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
-import { cmsCreate, cmsDelete, cmsList } from '../cms/cmsApi';
+import { cmsCreate, cmsDelete, cmsList, cmsUpdate } from '../cms/cmsApi';
 import { slugify } from '../cms/cmsConstants';
 import { CmsAlert, CmsLoading, ConfirmDialog, StatusBadge } from '../cms/CmsUi';
 import '../cms/Cms.css';
 
 const emptyForm = {
+  id: '',
   title: '',
   slug: '',
   type: 'article',
@@ -44,14 +45,23 @@ const CmsCategoriesList = () => {
   const save = async () => {
     setError('');
     try {
-      await cmsCreate('categories', {
-        ...form,
+      const payload = {
+        title: form.title.trim(),
         slug: form.slug || slugify(form.title),
-      });
+        type: form.type,
+        description: form.description || null,
+        status: form.status,
+        sort_order: Number(form.sort_order || 0),
+      };
+      if (form.id) {
+        await cmsUpdate('categories', form.id, payload);
+      } else {
+        await cmsCreate('categories', payload);
+      }
       setForm(emptyForm);
       await load();
     } catch {
-      setError('Не удалось создать категорию.');
+      setError('Не удалось сохранить категорию.');
     }
   };
 
@@ -63,6 +73,10 @@ const CmsCategoriesList = () => {
         <div className="cms-toolbar">
           <strong>Категории</strong>
         </div>
+        <p className="cms-panel__lead" style={{ marginBottom: 12 }}>
+          Тип — для чего категория: article (статьи), news (новости), product (продукты каталога).
+          Slug — короткий адрес категории латиницей (например: loans, jobs).
+        </p>
         <CmsAlert>{error}</CmsAlert>
         <div className="cms-form" style={{ marginBottom: 18 }}>
           <div className="cms-form__grid">
@@ -72,16 +86,16 @@ const CmsCategoriesList = () => {
                 value={form.title}
                 onChange={(e) => {
                   const title = e.target.value;
-                  setForm((prev) => ({ ...prev, title, slug: prev.slug || slugify(title) }));
+                  setForm((prev) => ({ ...prev, title, slug: prev.id ? prev.slug : prev.slug || slugify(title) }));
                 }}
               />
             </label>
             <label className="cms-field">
               <span>Тип</span>
               <select value={form.type} onChange={(e) => setForm((prev) => ({ ...prev, type: e.target.value }))}>
-                <option value="article">article</option>
-                <option value="news">news</option>
-                <option value="product">product</option>
+                <option value="article">article — статьи</option>
+                <option value="news">news — новости</option>
+                <option value="product">product — продукты</option>
               </select>
             </label>
           </div>
@@ -98,9 +112,16 @@ const CmsCategoriesList = () => {
               />
             </label>
           </div>
-          <button type="button" className="admin-btn admin-btn--primary" onClick={save}>
-            Создать категорию
-          </button>
+          <div className="cms-toolbar__right">
+            <button type="button" className="admin-btn admin-btn--primary" onClick={save} disabled={!form.title.trim()}>
+              {form.id ? 'Сохранить' : 'Создать категорию'}
+            </button>
+            {form.id ? (
+              <button type="button" className="admin-btn admin-btn--ghost" onClick={() => setForm(emptyForm)}>
+                Отмена
+              </button>
+            ) : null}
+          </div>
         </div>
 
         {!items.length ? (
@@ -128,9 +149,28 @@ const CmsCategoriesList = () => {
                     <StatusBadge status={item.status} />
                   </td>
                   <td>
-                    <button type="button" className="admin-btn admin-btn--danger" onClick={() => setDeleteId(item.id)}>
-                      Удалить
-                    </button>
+                    <div className="cms-table__actions">
+                      <button
+                        type="button"
+                        className="admin-btn admin-btn--ghost"
+                        onClick={() =>
+                          setForm({
+                            id: item.id,
+                            title: item.title || '',
+                            slug: item.slug || '',
+                            type: item.type || 'article',
+                            description: item.description || '',
+                            status: item.status || 'published',
+                            sort_order: item.sort_order ?? 0,
+                          })
+                        }
+                      >
+                        Изменить
+                      </button>
+                      <button type="button" className="admin-btn admin-btn--danger" onClick={() => setDeleteId(item.id)}>
+                        Удалить
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

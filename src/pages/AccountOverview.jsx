@@ -1,12 +1,11 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { BONUS_CONFIG, formatPoints, pointsToRubles } from '../config/bonuses';
-import { ALL_OFFERS } from '../data/offersRegistry';
-import { useFavorites } from '../hooks/useFavorites';
+import { useFavoriteOffers } from '../hooks/useFavoriteOffers';
 
 const AccountOverview = () => {
   const { user, claimBonus } = useAuth();
-  const { favorites } = useFavorites();
+  const { items: favoriteItems } = useFavoriteOffers();
   if (!user) return null;
 
   const balance = user.bonusBalance || 0;
@@ -16,7 +15,7 @@ const AccountOverview = () => {
   const apps = user.applications || { total: 0, approved: 0, rejected: 0 };
   const approval = apps.total ? Math.round((apps.approved / apps.total) * 100) : 0;
   const recentBonuses = (user.bonusHistory || []).slice(0, 4);
-  const favItems = ALL_OFFERS.filter((item) => favorites.includes(item.id)).slice(0, 3);
+  const favItems = favoriteItems.slice(0, 3);
   const initials = (user.name || 'U').trim().charAt(0).toUpperCase();
   const tasks = Object.values(BONUS_CONFIG.actions).slice(0, 4);
 
@@ -64,7 +63,7 @@ const AccountOverview = () => {
       <section className="cabinet-grid cabinet-grid--3">
         <article className="cabinet-panel">
           <h2>Статистика заявок</h2>
-          <div className="cabinet-grid cabinet-grid--3">
+          <div className="cabinet-stats">
             <div className="cabinet-stat">
               <span>Заявок</span>
               <strong>{apps.total}</strong>
@@ -78,7 +77,7 @@ const AccountOverview = () => {
               <strong>{apps.rejected}</strong>
             </div>
           </div>
-          <p style={{ marginTop: 12 }}>Процент одобрения внутри сервиса: {approval}%</p>
+          <p className="cabinet-stats__note">Процент одобрения внутри сервиса: {approval}%</p>
         </article>
 
         <article className="cabinet-panel">
@@ -136,15 +135,18 @@ const AccountOverview = () => {
           <h2>Избранные предложения</h2>
           {favItems.length ? (
             <div className="cabinet-list">
-              {favItems.map((item) => (
-                <div key={item.id} className="cabinet-list__item">
+              {favItems.map((item) => {
+                const offerSlug = item.slug || item.key;
+                return (
+                <div key={item.key || offerSlug} className="cabinet-list__item">
                   <div>
                     <strong>{item.title}</strong>
                     <span>{item.catalogLabel}</span>
                   </div>
-                  <Link to={`/offer/${item.slug}`} className="btn btn--secondary btn--sm">Открыть</Link>
+                  <Link to={`/offer/${encodeURIComponent(offerSlug)}`} className="btn btn--secondary btn--sm">Открыть</Link>
                 </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="cabinet-empty">

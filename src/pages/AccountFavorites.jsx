@@ -1,30 +1,35 @@
 import { Link } from 'react-router-dom';
-import { ALL_OFFERS } from '../data/offersRegistry';
-import { useFavorites } from '../hooks/useFavorites';
+import { useFavoriteOffers } from '../hooks/useFavoriteOffers';
 
 const AccountFavorites = () => {
-  const { favorites, toggleFavorite } = useFavorites();
-  const items = ALL_OFFERS.filter((item) => favorites.includes(item.id));
+  const { items, loading, toggleFavorite } = useFavoriteOffers();
 
   return (
     <section className="cabinet-panel">
       <h2>Избранные предложения</h2>
-      {items.length ? (
+      {loading ? (
+        <div className="cabinet-empty" style={{ marginTop: 12 }}>
+          <p>Загрузка…</p>
+        </div>
+      ) : items.length ? (
         <div className="cabinet-list" style={{ marginTop: 8 }}>
-          {items.map((item) => (
-            <div key={item.id} className="cabinet-list__item">
+          {items.map((item) => {
+            const offerSlug = item.slug || item.key;
+            return (
+            <div key={item.key || offerSlug} className="cabinet-list__item">
               <div>
                 <strong>{item.title}</strong>
                 <span>{item.catalogLabel}</span>
               </div>
               <div className="cabinet-actions">
-                <Link to={`/offer/${item.slug}`} className="btn btn--primary btn--sm">Подробнее</Link>
-                <button type="button" className="btn btn--secondary btn--sm" onClick={() => toggleFavorite(item.id)}>
+                <Link to={`/offer/${encodeURIComponent(offerSlug)}`} className="btn btn--primary btn--sm">Подробнее</Link>
+                <button type="button" className="btn btn--secondary btn--sm" onClick={() => toggleFavorite(item)}>
                   Убрать
                 </button>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <div className="cabinet-empty" style={{ marginTop: 12 }}>

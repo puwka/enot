@@ -1,10 +1,14 @@
 import { Router } from 'express';
 import {
+  fetchArticleBySlug,
+  fetchArticlesList,
   fetchCalculatorConfig,
   fetchCatalogProducts,
+  fetchFaqList,
   fetchNewsBySlug,
   fetchNewsList,
   fetchOfferBySlug,
+  fetchRelatedArticles,
   fetchRelatedNews,
   fetchRelatedOffers,
   getCategoryId,
@@ -70,6 +74,35 @@ router.get('/news/:slug', async (req, res) => {
     return res.json({ item, related });
   } catch {
     res.status(500).json({ error: 'REQUEST_FAILED', message: 'Не удалось загрузить новость.' });
+  }
+});
+
+router.get('/articles', async (_req, res) => {
+  try {
+    const items = await fetchArticlesList();
+    res.json({ items });
+  } catch {
+    res.status(500).json({ error: 'REQUEST_FAILED', message: 'Не удалось загрузить статьи.' });
+  }
+});
+
+router.get('/articles/:slug', async (req, res) => {
+  try {
+    const item = await fetchArticleBySlug(req.params.slug);
+    if (!item) return res.status(404).json({ error: 'NOT_FOUND' });
+    const related = await fetchRelatedArticles(item.slug, 3);
+    return res.json({ item, related });
+  } catch {
+    res.status(500).json({ error: 'REQUEST_FAILED', message: 'Не удалось загрузить статью.' });
+  }
+});
+
+router.get('/faq', async (_req, res) => {
+  try {
+    const items = await fetchFaqList();
+    res.json({ items });
+  } catch {
+    res.status(500).json({ error: 'REQUEST_FAILED', message: 'Не удалось загрузить FAQ.' });
   }
 });
 

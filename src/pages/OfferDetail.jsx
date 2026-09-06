@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, Navigate, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { getOfferBySlug, getRelatedOffers } from '../data/offersRegistry';
 import {
   CATALOG_PATH_TO_CATEGORY_SLUG,
@@ -15,29 +15,44 @@ const OfferDetail = () => {
   const { slug } = useParams();
   const [runtimeOffer, setRuntimeOffer] = useState(undefined);
   const [runtimeRelated, setRuntimeRelated] = useState([]);
-  const offer = runtimeOffer === undefined ? getOfferBySlug(slug) : runtimeOffer || getOfferBySlug(slug);
+  const staticOffer = useMemo(() => getOfferBySlug(decodeURIComponent(slug || '')), [slug]);
+  const offer = runtimeOffer === undefined ? staticOffer : runtimeOffer || staticOffer;
   const relatedFallback = useMemo(() => getRelatedOffers(offer, 4), [offer]);
   const related = runtimeRelated.length ? runtimeRelated : relatedFallback;
   const content = useMemo(() => (offer ? buildOfferContent(offer) : null), [offer]);
+  const [loading, setLoading] = useState(!staticOffer);
+
   useEffect(() => {
     let cancelled = false;
-    const staticOffer = getOfferBySlug(slug);
-    const categorySlug = staticOffer ? CATALOG_PATH_TO_CATEGORY_SLUG[staticOffer.catalogPath] : null;
-    const relatedPromise = categorySlug
-      ? fetchRelatedOffersByCategory(categorySlug, slug, 4).catch(() => [])
-      : Promise.resolve([]);
+    const decodedSlug = decodeURIComponent(slug || '');
+    setRuntimeOffer(undefined);
+    setRuntimeRelated([]);
+    setLoading(!getOfferBySlug(decodedSlug));
 
-    Promise.all([fetchOfferBySlug(slug), relatedPromise])
-      .then(([dbOffer, related]) => {
+    Promise.all([
+      fetchOfferBySlug(decodedSlug),
+      Promise.resolve(null),
+    ])
+      .then(async ([dbOffer]) => {
         if (cancelled) return;
         setRuntimeOffer(dbOffer);
-        if (related.length) setRuntimeRelated(related);
+        const knownOffer = dbOffer || getOfferBySlug(decodedSlug);
+        const categorySlug = knownOffer
+          ? CATALOG_PATH_TO_CATEGORY_SLUG[knownOffer.catalogPath]
+          : null;
+        if (categorySlug) {
+          const relatedItems = await fetchRelatedOffersByCategory(categorySlug, decodedSlug, 4).catch(() => []);
+          if (!cancelled && relatedItems.length) setRuntimeRelated(relatedItems);
+        }
       })
       .catch(() => {
         if (!cancelled) {
           setRuntimeOffer(null);
           setRuntimeRelated([]);
         }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
       });
     return () => {
       cancelled = true;
@@ -47,11 +62,30 @@ const OfferDetail = () => {
   const { isFavorite, toggleFavorite } = useFavorites();
   const [openFaq, setOpenFaq] = useState(0);
 
-  if (!offer || !content) {
-    return <Navigate to="/loans" replace />;
+  if (loading) {
+    return (
+      <main className="offer">
+        <div className="offer__container">
+          <p className="offer-hero__lead">Загрузка предложения…</p>
+        </div>
+      </main>
+    );
   }
 
-  const fav = isFavorite(offer.id);
+  if (!offer || !content) {
+    return (
+      <main className="offer">
+        <div className="offer__container">
+          <p className="offer-hero__lead">Предложение не найдено или ещё не опубликовано.</p>
+          <Link to="/loans" className="offer-btn offer-btn--primary">
+            К каталогу
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
+  const fav = isFavorite(offer);
 
   return (
     <main className="offer">
@@ -81,7 +115,7 @@ const OfferDetail = () => {
               <button
                 type="button"
                 className={`offer-btn offer-btn--ghost${fav ? ' is-active' : ''}`}
-                onClick={() => toggleFavorite(offer.id)}
+                onClick={() => toggleFavorite(offer)}
                 aria-pressed={fav}
               >
                 <HeartIcon filled={fav} size={18} />

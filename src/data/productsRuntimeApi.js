@@ -16,13 +16,15 @@ const mapProduct = (row) => {
   const amount = row.sum || '';
   const term = row.term || '';
   const advantages = Array.isArray(row.advantages) ? row.advantages : [];
+  const slug = row.slug || '';
   return {
-    id: row.id,
-    slug: row.slug,
+    id: slug || row.id,
+    dbId: row.id,
+    slug,
     title: row.title,
     bank: row.bank || row.title,
     image: resolveProductImage({
-      slug: row.slug,
+      slug,
       link: row.link,
       logoUrl: row.image,
       bankLogoUrl: row.image,
@@ -128,4 +130,10 @@ export const CATALOG_PATH_TO_CATEGORY_SLUG = {
   '/auto-loans': 'credit-cards',
   '/consumer-loans': 'consumer-loans',
   '/collateral-loans': 'collateral-loans',
+  '/settlement-accounts': 'settlement-accounts',
+  '/services': 'services',
+  '/shops': 'shops',
+  '/obuchenie': 'obuchenie',
+  '/Education': 'obuchenie',
+  '/Job': 'jobs',
 };
