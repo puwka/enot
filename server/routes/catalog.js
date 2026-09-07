@@ -19,7 +19,8 @@ const router = Router();
 router.get('/products', async (req, res) => {
   try {
     const category = String(req.query.category || '');
-    const items = await fetchCatalogProducts(category);
+    const featuredOnly = ['1', 'true', 'yes'].includes(String(req.query.featured || '').toLowerCase());
+    const items = await fetchCatalogProducts(category, { featuredOnly });
     res.json({ items });
   } catch {
     res.status(500).json({ error: 'REQUEST_FAILED', message: 'Не удалось загрузить продукты.' });

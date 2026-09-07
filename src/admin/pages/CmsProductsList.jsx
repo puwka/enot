@@ -109,7 +109,7 @@ const CmsProductsList = ({ sectionKey }) => {
               <th>Тип</th>
               <th>Ставка</th>
               <th>Active</th>
-              <th>Featured</th>
+              <th>На главной</th>
               <th>Статус</th>
               <th />
             </tr>

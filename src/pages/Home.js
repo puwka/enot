@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Calculator from '../components/Calculator';
 import { useFavorites } from '../hooks/useFavorites';
-import { getOfferByLink } from '../data/offersRegistry';
 import HeartIcon from '../components/HeartIcon';
 import heroMascot from '../img_main/image-edited-free (carve.photos).png';
 import heroMascotMobile from '../images/enot__png.png';
@@ -12,183 +11,140 @@ import catCreditIcon from '../img_main/cat-credit.png';
 import catEducationIcon from '../img_main/cat-education.svg';
 import catServicesIcon from '../img_main/cat-services.svg';
 import catShopsIcon from '../img_main/cat-shops.svg';
-import { EDUCATION_ITEMS } from './EducationData';
-import { SERVICES_ITEMS } from './Services';
-import { SHOPS_ITEMS } from './Shops';
 import { fetchCatalogProducts } from '../data/productsRuntimeApi';
 import articleCredits from '../img_main/article-credits.png';
 import articleCards from '../img_main/article-cards.png';
 import articleSecurity from '../img_main/article-security.png';
-import vtb from '../images/vtb.webp';
-import alfa from '../images/alfa.webp';
-import mts from '../images/mts.webp';
-import tin from '../images/tbank.webp';
-import fora from '../images/fora.webp';
-import bars from '../images/bars.webp';
-import rus from '../images/rus.webp';
-import ural from '../images/ural.webp';
-import halva from '../images/halva.webp';
-import sov from '../images/sov.webp';
-import ren from '../images/renesans.webp';
-import atb from '../images/atb.webp';
 import './Home.css';
 
 const OFFER_TABS = {
+  loans: {
+    label: 'Микрозаймы',
+    allTo: '/loans',
+    category: 'loans',
+  },
   consumer: {
-    label: 'Потребительские кредиты',
+    label: 'Потреб. кредиты',
     allTo: '/consumer-loans',
-    items: [
-      { bank: 'Русский Стандарт', type: 'Кредит наличными', image: rus, rate: 'До 65%', sum: '30 000 – 3 млн ₽', term: 'До 60 мес.', payment: 'от 8 900 ₽', link: 'https://fin-lg.com/aff_c?aff_id=145356&offer_id=6459&p=10695&erid=2W5zFH1t71s' },
-      { bank: 'Совкомбанк', type: 'Кредит наличными', image: sov, rate: 'До 30%', sum: '30 000 – 5 млн ₽', term: 'До 5 лет', payment: 'от 7 200 ₽', link: 'https://fin-lg.com/aff_c?aff_id=145356&offer_id=5199&p=10695&erid=2W5zFGFFjxt' },
-      { bank: 'Ренессанс Банк', type: 'Кредит наличными', image: ren, rate: 'До 40%', sum: '30 000 – 2 млн ₽', term: 'До 84 мес.', payment: 'от 6 450 ₽', link: 'https://go.leadgid.ru/aff_c?aff_id=145356&offer_id=6138&p=10695&erid=2W5zFJeimse' },
-      { bank: 'АТБ', type: 'Кредит наличными', image: atb, rate: 'До 39%', sum: '30 000 – 5 млн ₽', term: 'До 84 мес.', payment: 'от 6 800 ₽', link: 'https://fin-lg.com/aff_c?aff_id=145356&offer_id=2583&p=10695&erid=LjN8KGDaw' },
-      { bank: 'Т-Банк', type: 'Рефинансирование', image: tin, rate: 'До 40%', sum: '50 000 – 5 млн ₽', term: 'До 5 лет', payment: 'от 9 100 ₽', link: 'https://my.saleads.pro/s/gf6yt?erid=2VtzqvB9uxS' },
-    ],
+    category: 'consumer-loans',
+  },
+  collateral: {
+    label: 'Под залог',
+    allTo: '/collateral-loans',
+    category: 'collateral-loans',
   },
   cards: {
     label: 'Дебетовые карты',
     allTo: '/cards',
-    items: [
-      { bank: 'ВТБ', type: 'Дебетовая карта', image: vtb, rate: 'Кешбэк до 3 000 ₽', sum: 'Бесплатная доставка', term: 'Бесплатно', payment: '—', link: 'https://fin-lg.com/aff_c?aff_id=145356&offer_id=7332&p=10695&erid=2W5zFJuUpi5' },
-      { bank: 'Альфа-Банк', type: 'Апельсиновая карта', image: alfa, rate: 'Кешбэк до 7%', sum: 'Баллы до 100%', term: 'Бесплатно', payment: '—', link: 'https://fin-lg.com/aff_c?aff_id=145356&offer_id=7049&p=10695&erid=2W5zFHrdQPS' },
-      { bank: 'МТС Деньги', type: 'Дебетовая карта', image: mts, rate: 'До 10 000 ₽', sum: '5% супермаркеты', term: '30% на связь', payment: '—', link: 'https://fin-lg.com/aff_c?aff_id=145356&offer_id=6766&p=10695&erid=2W5zFFy4MBv' },
-      { bank: 'Фора-Банк', type: 'Все включено', image: fora, rate: 'До 10 000 ₽', sum: 'До 40% в магазинах', term: 'Бесплатно', payment: '—', link: 'https://go.leadgid.ru/aff_c?aff_id=145356&offer_id=6236&p=10695&erid=LjN8KXfdi' },
-      { bank: 'Т-Банк', type: 'Drive', image: tin, rate: 'До 10% АЗС', sum: 'До 5% авто', term: '1% прочее', payment: '—', link: 'https://my.saleads.pro/s/dcJ8k?erid=2Vtzqvk9Tcz' },
-    ],
+    category: 'debit-cards',
   },
   credit: {
     label: 'Кредитные карты',
     allTo: '/auto-loans',
-    items: [
-      { bank: 'АК Барс', type: '115 дней', image: bars, rate: 'До 115 дней без %', sum: '10 000 – 1 млн ₽', term: 'До 5 лет', payment: 'от 3 500 ₽', link: 'https://fin-lg.com/aff_c?aff_id=145356&offer_id=6474&p=10695&erid=2W5zFHxn2e4' },
-      { bank: 'Русский Стандарт', type: 'Кредитная карта', image: rus, rate: 'До 59%', sum: '30 000 – 1 млн ₽', term: 'До 5 лет', payment: 'от 4 200 ₽', link: 'https://go.leadgid.ru/aff_c?aff_id=145356&offer_id=6460&p=10695&erid=2W5zFH3N6JD' },
-      { bank: 'Уралсиб', type: 'Кредитная карта', image: ural, rate: 'От 34,9%', sum: '10 000 – 5 млн ₽', term: 'До 5 лет', payment: 'от 5 100 ₽', link: 'https://fin-lg.com/aff_c?aff_id=145356&offer_id=5567&p=10695&erid=2W5zFJjKetp' },
-      { bank: 'Халва', type: 'Рассрочка', image: halva, rate: 'До 15%', sum: '10 000 – 100 000 ₽', term: 'До 7 лет', payment: 'от 2 800 ₽', link: 'https://fin-lg.com/aff_c?aff_id=145356&offer_id=2413&p=10695&erid=LjN8KTAzF' },
-      { bank: 'Т-Банк', type: 'Drive', image: tin, rate: 'До 62%', sum: '15 000 – 1 млн ₽', term: '5 лет', payment: 'от 4 900 ₽', link: 'https://my.saleads.pro/s/ounml?erid=2VtzqvRynmt' },
-    ],
+    category: 'credit-cards',
+  },
+  settlement: {
+    label: 'Расчётные счета',
+    allTo: '/settlement-accounts',
+    category: 'settlement-accounts',
   },
   education: {
     label: 'Обучение',
     allTo: '/obuchenie',
-    items: EDUCATION_ITEMS.slice(0, 5).map((item) => ({
-      bank: item.naprav,
-      type: 'Курс',
-      image: item.image,
-      rate: 'Онлайн',
-      sum: 'Запись на сайте',
-      term: 'Гибкий график',
-      payment: '—',
-      link: item.link,
-    })),
+    category: 'obuchenie',
   },
   services: {
     label: 'Сервисы',
     allTo: '/services',
-    items: SERVICES_ITEMS.slice(0, 5).map((item) => ({
-      bank: item.nameis,
-      type: item.spec,
-      image: item.image,
-      rate: 'Подработка',
-      sum: 'Гибкий график',
-      term: 'Онлайн-заявка',
-      payment: '—',
-      link: item.link,
-    })),
+    category: 'services',
   },
   shops: {
     label: 'Магазины',
     allTo: '/shops',
-    items: SHOPS_ITEMS.slice(0, 5).map((item) => ({
-      bank: item.bank,
-      type: 'Кешбэк',
-      image: item.image,
-      rate: item.opis,
-      sum: item.opis1,
-      term: item.opis2,
-      payment: '—',
-      link: item.link,
-    })),
+    category: 'shops',
+  },
+  jobs: {
+    label: 'Вакансии',
+    allTo: '/Job',
+    category: 'jobs',
   },
 };
 
-const TAB_CATEGORY = {
-  consumer: 'consumer-loans',
-  cards: 'debit-cards',
-  credit: 'credit-cards',
-};
+const OFFER_TAB_KEYS = [
+  'loans',
+  'consumer',
+  'collateral',
+  'cards',
+  'credit',
+  'settlement',
+  'education',
+  'services',
+  'shops',
+  'jobs',
+];
 
 const mapCmsToHomeItem = (row) => ({
   bank: row.bank || row.title,
   type: row.spec || row.catalogLabel || '',
   image: row.image,
-  rate: row.rate || '—',
-  sum: row.sum || '—',
-  term: row.term || '—',
+  rate: row.rate || row.benefit1 || '—',
+  sum: row.sum || row.benefit2 || '—',
+  term: row.term || row.benefit3 || '—',
   payment: row.payment || '—',
   link: row.link,
   slug: row.slug,
-  id: row.id,
+  id: row.id || row.slug,
   catalogPath: row.catalogPath,
   catalogLabel: row.catalogLabel,
   title: row.title,
 });
 
 const Home = () => {
-  const [activeTab, setActiveTab] = useState('consumer');
+  const [activeTab, setActiveTab] = useState('loans');
   const [cmsTabItems, setCmsTabItems] = useState({});
+  const [tabsReady, setTabsReady] = useState({});
   const { isFavorite, toggleFavorite } = useFavorites();
   const baseTab = OFFER_TABS[activeTab];
   const current = {
     ...baseTab,
-    items: cmsTabItems[activeTab] || baseTab.items,
+    items: tabsReady[activeTab] ? cmsTabItems[activeTab] || [] : [],
   };
 
-  const favoritePayload = (item, matched) => ({
-    ...(matched || {}),
-    title: matched?.title || item.bank,
-    image: matched?.image || item.image,
+  const favoritePayload = (item) => ({
+    title: item.title || item.bank,
+    image: item.image,
     link: item.link,
     rate: item.rate,
     sum: item.sum,
     term: item.term,
-    catalogPath: matched?.catalogPath || item.catalogPath || current.allTo,
-    catalogLabel: matched?.catalogLabel || item.catalogLabel || current.label,
-    slug: matched?.slug || item.slug || undefined,
-    id: matched?.id || matched?.slug || item.id || item.link,
+    catalogPath: item.catalogPath || current.allTo,
+    catalogLabel: item.catalogLabel || current.label,
+    slug: item.slug || undefined,
+    id: item.id || item.slug || item.link,
   });
 
   useEffect(() => {
     let cancelled = false;
-    Object.entries(TAB_CATEGORY).forEach(([tabKey, categorySlug]) => {
-      fetchCatalogProducts(categorySlug)
+    OFFER_TAB_KEYS.forEach((tabKey) => {
+      const categorySlug = OFFER_TABS[tabKey].category;
+      fetchCatalogProducts(categorySlug, { featured: true })
         .then((rows) => {
           if (cancelled || !Array.isArray(rows)) return;
           setCmsTabItems((prev) => ({
             ...prev,
-            [tabKey]: rows.slice(0, 5).map(mapCmsToHomeItem),
+            [tabKey]: rows.slice(0, 8).map(mapCmsToHomeItem),
           }));
+          setTabsReady((prev) => ({ ...prev, [tabKey]: true }));
         })
-        .catch(() => {});
+        .catch(() => {
+          if (cancelled) return;
+          setCmsTabItems((prev) => ({ ...prev, [tabKey]: [] }));
+          setTabsReady((prev) => ({ ...prev, [tabKey]: true }));
+        });
     });
     return () => {
       cancelled = true;
     };
-  }, []);
-
-  useEffect(() => {
-    const prefetch = () => {
-      ['loans', 'debit-cards', 'credit-cards'].forEach((slug) => {
-        fetchCatalogProducts(slug).catch(() => {});
-      });
-    };
-
-    if (typeof window.requestIdleCallback === 'function') {
-      const idleId = window.requestIdleCallback(prefetch, { timeout: 3000 });
-      return () => window.cancelIdleCallback(idleId);
-    }
-
-    const timerId = window.setTimeout(prefetch, 400);
-    return () => window.clearTimeout(timerId);
   }, []);
 
   useEffect(() => {
@@ -297,23 +253,23 @@ const Home = () => {
         <div className="container">
           <h2 className="home-block__title">Популярные категории</h2>
           <div className="home-cats">
-            <Link to="/consumer-loans" className="home-cat" style={{ '--reveal-delay': '60ms' }}>
-              <span className="home-cat__icon" aria-hidden="true">
-                <img src={catLoansIcon} alt="" />
-              </span>
-              <span className="home-cat__text">
-                <strong>Потребительские кредиты</strong>
-                <span>Сравните ставки и условия лучших банков</span>
-              </span>
-              <span className="home-cat__chevron" aria-hidden="true">›</span>
-            </Link>
-            <Link to="/loans" className="home-cat" style={{ '--reveal-delay': '100ms' }}>
+            <Link to="/loans" className="home-cat" style={{ '--reveal-delay': '60ms' }}>
               <span className="home-cat__icon" aria-hidden="true">
                 <img src={catLoansIcon} alt="" />
               </span>
               <span className="home-cat__text">
                 <strong>Микрозаймы</strong>
                 <span>Быстрые займы на карту от МФО</span>
+              </span>
+              <span className="home-cat__chevron" aria-hidden="true">›</span>
+            </Link>
+            <Link to="/consumer-loans" className="home-cat" style={{ '--reveal-delay': '100ms' }}>
+              <span className="home-cat__icon" aria-hidden="true">
+                <img src={catLoansIcon} alt="" />
+              </span>
+              <span className="home-cat__text">
+                <strong>Потребительские кредиты</strong>
+                <span>Сравните ставки и условия лучших банков</span>
               </span>
               <span className="home-cat__chevron" aria-hidden="true">›</span>
             </Link>
@@ -414,7 +370,7 @@ const Home = () => {
           </div>
 
           <div className="home-tabs" role="tablist">
-            {['consumer', 'cards', 'credit', 'education', 'services', 'shops'].map((key) => (
+            {OFFER_TAB_KEYS.map((key) => (
               <button
                 key={key}
                 type="button"
@@ -428,7 +384,15 @@ const Home = () => {
             ))}
           </div>
 
-          <div className="home-table-wrap" key={activeTab}>
+          {!current.items.length ? (
+            <div className="home-offers-empty">
+              {tabsReady[activeTab]
+                ? 'Пока нет продуктов с галочкой «Показывать в Лучших предложениях». Откройте продукт в админке, включите галочку, статус «Опубликовано» и «Показывать на сайте», затем сохраните.'
+                : 'Загрузка предложений…'}
+            </div>
+          ) : null}
+
+          <div className="home-table-wrap" key={activeTab} hidden={!current.items.length}>
             <table className="home-table">
               <thead>
                 <tr>
@@ -442,19 +406,19 @@ const Home = () => {
               </thead>
               <tbody>
                 {current.items.map((item, index) => {
-                  const matched = getOfferByLink(item.link);
-                  const payload = favoritePayload(item, matched);
+                  const payload = favoritePayload(item);
                   const fav = isFavorite(payload);
+                  const detailTo = item.slug ? `/offer/${encodeURIComponent(item.slug)}` : null;
                   return (
                   <tr
-                    key={`${activeTab}-${item.bank}-${index}`}
+                    key={`${activeTab}-${item.slug || item.bank}-${index}`}
                     className="home-table__row-anim"
                     style={{ '--row-delay': `${index * 55}ms` }}
                   >
                     <td>
                       <div className="home-table__bank">
                         <span className="home-table__num">{index + 1}</span>
-                        <img src={item.image} alt="" />
+                        {item.image ? <img src={item.image} alt="" /> : null}
                         <div>
                           <strong>{item.bank}</strong>
                           <span>{item.type}</span>
@@ -467,8 +431,8 @@ const Home = () => {
                     <td><strong>{item.payment}</strong></td>
                     <td>
                       <div className="home-table__actions">
-                        {matched ? (
-                          <Link to={`/offer/${matched.slug}`} className="home-btn home-btn--primary home-btn--sm">
+                        {detailTo ? (
+                          <Link to={detailTo} className="home-btn home-btn--primary home-btn--sm">
                             Подробнее
                           </Link>
                         ) : (
@@ -494,16 +458,18 @@ const Home = () => {
             </table>
           </div>
 
-          <div className="home-offer-mobile" key={`m-${activeTab}`}>
-            {current.items.map((item, index) => (
+          <div className="home-offer-mobile" key={`m-${activeTab}`} hidden={!current.items.length}>
+            {current.items.map((item, index) => {
+              const detailTo = item.slug ? `/offer/${encodeURIComponent(item.slug)}` : null;
+              return (
               <article
-                key={`m-${activeTab}-${item.bank}-${index}`}
+                key={`m-${activeTab}-${item.slug || item.bank}-${index}`}
                 className="home-offer-mobile__card home-table__row-anim"
                 style={{ '--row-delay': `${index * 55}ms` }}
               >
                 <div className="home-table__bank">
                   <span className="home-table__num">{index + 1}</span>
-                  <img src={item.image} alt="" />
+                  {item.image ? <img src={item.image} alt="" /> : null}
                   <div>
                     <strong>{item.bank}</strong>
                     <span>{item.type}</span>
@@ -515,24 +481,22 @@ const Home = () => {
                   <div><span>Срок</span><strong>{item.term}</strong></div>
                   <div><span>Ежемесячный платёж</span><strong>{item.payment}</strong></div>
                 </div>
-                {(() => {
-                  const matched = getOfferByLink(item.link);
-                  return matched ? (
-                    <Link to={`/offer/${matched.slug}`} className="home-btn home-btn--primary home-btn--block">
-                      Подробнее
-                    </Link>
-                  ) : (
-                    <a href={item.link} target="_blank" rel="noopener noreferrer" className="home-btn home-btn--primary home-btn--block">
-                      Подробнее
-                    </a>
-                  );
-                })()}
+                {detailTo ? (
+                  <Link to={detailTo} className="home-btn home-btn--primary home-btn--block">
+                    Подробнее
+                  </Link>
+                ) : (
+                  <a href={item.link} target="_blank" rel="noopener noreferrer" className="home-btn home-btn--primary home-btn--block">
+                    Подробнее
+                  </a>
+                )}
               </article>
-            ))}
+              );
+            })}
           </div>
 
           <p className="home-table__note">
-            Рейтинг составлен на основе ставок и условий банков на 31.07.2026.
+            В блоке показываются только продукты с галочкой «Показывать в Лучших предложениях на главной» в админке.
           </p>
         </div>
       </section>

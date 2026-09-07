@@ -59,9 +59,10 @@ const mapProduct = (row) => {
     description: row.description || '',
     conditions: row.conditions || '',
     advantages,
-    attributes: attrs,
+    attributes: row.attributes && typeof row.attributes === 'object' ? row.attributes : {},
     commission: row.commission,
     bankId: row.bank_id,
+    featured: Boolean(row.featured),
   };
 };
 
@@ -88,16 +89,18 @@ export const getCategoryId = async (categorySlug) => {
   return rows[0]?.id || null;
 };
 
-export const fetchCatalogProducts = async (categorySlug) => {
+export const fetchCatalogProducts = async (categorySlug, { featuredOnly = false } = {}) => {
   const categoryId = await getCategoryId(categorySlug);
   if (!categoryId) return [];
+  const featuredClause = featuredOnly ? 'AND fp.featured = true' : '';
   const { rows } = await query(
     `${productSelect}
      WHERE fp.category_id = $1
        AND fp.status = 'published'
        AND fp.active = true
        AND fp.deleted_at IS NULL
-     ORDER BY fp.sort_order ASC`,
+       ${featuredClause}
+     ORDER BY fp.sort_order ASC, fp.updated_at DESC`,
     [categoryId]
   );
   return rows.map(mapProduct);

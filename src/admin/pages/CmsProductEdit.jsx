@@ -648,7 +648,7 @@ const CmsProductEdit = ({ sectionKey }) => {
                   checked={form.featured}
                   onChange={(e) => setForm((prev) => ({ ...prev, featured: e.target.checked }))}
                 />
-                <span>В избранных / топе</span>
+                <span>Показывать в «Лучших предложениях» на главной</span>
               </label>
             </div>
           </div>

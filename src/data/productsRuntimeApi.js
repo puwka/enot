@@ -48,28 +48,34 @@ const mapProduct = (row) => {
     advantages,
     attributes: row.attributes && typeof row.attributes === 'object' ? row.attributes : {},
     commission: row.commission,
+    featured: Boolean(row.featured),
   };
 };
 
-export const fetchCatalogProducts = async (categorySlug) => {
-  const cached = catalogCache.get(categorySlug);
+export const fetchCatalogProducts = async (categorySlug, options = {}) => {
+  const featuredOnly = Boolean(options.featured);
+  const cacheKey = `${categorySlug}::featured=${featuredOnly ? 1 : 0}`;
+  const cached = catalogCache.get(cacheKey);
   if (isFresh(cached)) return cached.data;
 
-  if (catalogInflight.has(categorySlug)) {
-    return catalogInflight.get(categorySlug);
+  if (catalogInflight.has(cacheKey)) {
+    return catalogInflight.get(cacheKey);
   }
 
-  const promise = apiFetch(`/catalog/products?category=${encodeURIComponent(categorySlug)}`)
+  const params = new URLSearchParams({ category: categorySlug });
+  if (featuredOnly) params.set('featured', '1');
+
+  const promise = apiFetch(`/catalog/products?${params.toString()}`)
     .then((payload) => {
       const result = (payload.items || []).map(mapProduct);
-      catalogCache.set(categorySlug, { at: Date.now(), data: result });
+      catalogCache.set(cacheKey, { at: Date.now(), data: result });
       return result;
     })
     .finally(() => {
-      catalogInflight.delete(categorySlug);
+      catalogInflight.delete(cacheKey);
     });
 
-  catalogInflight.set(categorySlug, promise);
+  catalogInflight.set(cacheKey, promise);
   return promise;
 };
 
