@@ -1,4 +1,5 @@
 import { query } from '../db.js';
+import { formatTermRange, normalizeTermUnit } from '../utils/termUnit.js';
 
 const fmtCurrency = (value) => {
   if (value == null || value === '') return '';
@@ -6,13 +7,15 @@ const fmtCurrency = (value) => {
 };
 
 const mapProduct = (row) => {
+  const attrs = row.attributes && typeof row.attributes === 'object' ? row.attributes : {};
+  const termUnit = normalizeTermUnit(attrs.term_unit, 'month');
   const amount =
     row.amount_min != null || row.amount_max != null
       ? `${row.amount_min != null ? `${fmtCurrency(row.amount_min)} ₽` : '—'} - ${row.amount_max != null ? `${fmtCurrency(row.amount_max)} ₽` : '—'}`
       : row.amount_label || '';
   const term =
     row.term_min != null || row.term_max != null
-      ? `${row.term_min ?? '—'} - ${row.term_max ?? '—'} мес.`
+      ? formatTermRange(row.term_min, row.term_max, termUnit)
       : row.term_label || '';
   const advantages = Array.isArray(row.advantages) ? row.advantages : row.advantages ? row.advantages : [];
   const categorySlug = row.category_slug || '';
@@ -56,7 +59,7 @@ const mapProduct = (row) => {
     description: row.description || '',
     conditions: row.conditions || '',
     advantages,
-    attributes: row.attributes && typeof row.attributes === 'object' ? row.attributes : {},
+    attributes: attrs,
     commission: row.commission,
     bankId: row.bank_id,
   };

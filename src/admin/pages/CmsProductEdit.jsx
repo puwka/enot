@@ -7,6 +7,7 @@ import { resolveProductImage } from '../../data/productImages';
 import { slugify, ensureProductSlug } from '../cms/cmsConstants';
 import CmsImageUpload from '../cms/CmsImageUpload';
 import { CmsAlert, CmsLoading, StatusBadge } from '../cms/CmsUi';
+import { TERM_UNITS, normalizeTermUnit } from '../../utils/termUnit';
 import '../cms/Cms.css';
 
 const emptyConditions = (fields = []) =>
@@ -34,6 +35,7 @@ const CmsProductEdit = ({ sectionKey }) => {
     amount_max: '',
     term_min: '',
     term_max: '',
+    term_unit: 'month',
     monthly_payment: '',
     commission: '',
     description: '',
@@ -92,6 +94,7 @@ const CmsProductEdit = ({ sectionKey }) => {
           ...prev,
           category_id: selectedCategory?.id || '',
           condition_values: emptyConditions(section.conditionFields || []),
+          term_unit: normalizeTermUnit(section.defaultTermUnit, 'month'),
           status: 'published',
           active: true,
           featured: false,
@@ -132,6 +135,7 @@ const CmsProductEdit = ({ sectionKey }) => {
           amount_max: product.amount_max ?? '',
           term_min: product.term_min ?? '',
           term_max: product.term_max ?? '',
+          term_unit: normalizeTermUnit(attrs.term_unit, section.defaultTermUnit || 'month'),
           monthly_payment: product.monthly_payment ?? '',
           commission: product.commission || '',
           description: product.description || '',
@@ -218,6 +222,7 @@ const CmsProductEdit = ({ sectionKey }) => {
         education_format: form.education_format.trim(),
         education_start: form.education_start.trim(),
         conditions_text: form.conditions_text.trim(),
+        term_unit: normalizeTermUnit(form.term_unit, section?.defaultTermUnit || 'month'),
       };
 
       if (sectionKey === 'shops') {
@@ -476,22 +481,39 @@ const CmsProductEdit = ({ sectionKey }) => {
               </div>
               <div className="cms-form__grid">
                 <label className="cms-field">
-                  <span>Срок от (мес.)</span>
+                  <span>Срок от</span>
                   <input
                     type="number"
+                    min="1"
+                    step="1"
                     value={form.term_min}
                     onChange={(e) => setForm((prev) => ({ ...prev, term_min: e.target.value }))}
                   />
                 </label>
                 <label className="cms-field">
-                  <span>Срок до (мес.)</span>
+                  <span>Срок до</span>
                   <input
                     type="number"
+                    min="1"
+                    step="1"
                     value={form.term_max}
                     onChange={(e) => setForm((prev) => ({ ...prev, term_max: e.target.value }))}
                   />
                 </label>
               </div>
+              <label className="cms-field">
+                <span>Единица срока</span>
+                <select
+                  value={form.term_unit}
+                  onChange={(e) => setForm((prev) => ({ ...prev, term_unit: e.target.value }))}
+                >
+                  {TERM_UNITS.map((unit) => (
+                    <option key={unit.value} value={unit.value}>
+                      {unit.label} (от 1)
+                    </option>
+                  ))}
+                </select>
+              </label>
               <div className="cms-form__grid">
                 <label className="cms-field">
                   <span>Ежемесячный платёж</span>

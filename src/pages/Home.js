@@ -111,10 +111,37 @@ const OFFER_TABS = {
   },
 };
 
+const TAB_CATEGORY = {
+  consumer: 'consumer-loans',
+  cards: 'debit-cards',
+  credit: 'credit-cards',
+};
+
+const mapCmsToHomeItem = (row) => ({
+  bank: row.bank || row.title,
+  type: row.spec || row.catalogLabel || '',
+  image: row.image,
+  rate: row.rate || '—',
+  sum: row.sum || '—',
+  term: row.term || '—',
+  payment: row.payment || '—',
+  link: row.link,
+  slug: row.slug,
+  id: row.id,
+  catalogPath: row.catalogPath,
+  catalogLabel: row.catalogLabel,
+  title: row.title,
+});
+
 const Home = () => {
   const [activeTab, setActiveTab] = useState('consumer');
+  const [cmsTabItems, setCmsTabItems] = useState({});
   const { isFavorite, toggleFavorite } = useFavorites();
-  const current = OFFER_TABS[activeTab];
+  const baseTab = OFFER_TABS[activeTab];
+  const current = {
+    ...baseTab,
+    items: cmsTabItems[activeTab] || baseTab.items,
+  };
 
   const favoritePayload = (item, matched) => ({
     ...(matched || {}),
@@ -124,11 +151,29 @@ const Home = () => {
     rate: item.rate,
     sum: item.sum,
     term: item.term,
-    catalogPath: matched?.catalogPath || current.allTo,
-    catalogLabel: matched?.catalogLabel || current.label,
-    slug: matched?.slug || undefined,
-    id: matched?.id || matched?.slug || item.link,
+    catalogPath: matched?.catalogPath || item.catalogPath || current.allTo,
+    catalogLabel: matched?.catalogLabel || item.catalogLabel || current.label,
+    slug: matched?.slug || item.slug || undefined,
+    id: matched?.id || matched?.slug || item.id || item.link,
   });
+
+  useEffect(() => {
+    let cancelled = false;
+    Object.entries(TAB_CATEGORY).forEach(([tabKey, categorySlug]) => {
+      fetchCatalogProducts(categorySlug)
+        .then((rows) => {
+          if (cancelled || !Array.isArray(rows)) return;
+          setCmsTabItems((prev) => ({
+            ...prev,
+            [tabKey]: rows.slice(0, 5).map(mapCmsToHomeItem),
+          }));
+        })
+        .catch(() => {});
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const prefetch = () => {

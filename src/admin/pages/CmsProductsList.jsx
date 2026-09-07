@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { cmsList, cmsDelete, cmsPublish, cmsUnpublish, cmsArchive } from '../cms/cmsApi';
 import { PRODUCT_SECTIONS } from '../cms/productSections';
-import { getSiteProducts, mergeProductItems } from '../cms/siteContent';
 import { CmsAlert, CmsLoading, ConfirmDialog, StatusBadge } from '../cms/CmsUi';
 import '../cms/Cms.css';
 
@@ -19,20 +18,19 @@ const CmsProductsList = ({ sectionKey }) => {
     if (!section) return;
     setLoading(true);
     setError('');
-    const siteItems = getSiteProducts(sectionKey);
     try {
       const data = await cmsList('products');
       const cmsItems = (data?.items || []).filter((item) =>
         (section.categorySlugs || [section.categorySlug]).includes(item.category_slug)
       );
-      setItems(mergeProductItems(cmsItems, siteItems));
+      setItems(cmsItems);
     } catch {
-      setItems(siteItems);
-      setError('');
+      setItems([]);
+      setError('Не удалось загрузить продукты из CMS. Проверьте сессию админа и миграции БД.');
     } finally {
       setLoading(false);
     }
-  }, [section, sectionKey]);
+  }, [section]);
 
   useEffect(() => {
     load();
@@ -97,7 +95,10 @@ const CmsProductsList = ({ sectionKey }) => {
       <CmsAlert>{error}</CmsAlert>
       {!filtered.length ? (
         <div className="cms-dash-empty">
-          <p>В этом разделе пока нет предложений.</p>
+          <p>В этом разделе пока нет предложений в CMS. Нажмите «Добавить», чтобы создать продукт.</p>
+          <p className="cms-muted" style={{ marginTop: 8 }}>
+            Старые захардкоженные офферы больше не показываются здесь и не попадают на сайт, пока API каталога работает.
+          </p>
         </div>
       ) : (
         <table className="cms-table">
@@ -115,53 +116,63 @@ const CmsProductsList = ({ sectionKey }) => {
           </thead>
           <tbody>
             {filtered.map((item) => {
-              const isSite = item.source === 'site' || String(item.id).startsWith('site-');
               const editId = encodeURIComponent(item.id);
               return (
-              <tr key={item.id}>
-                <td>
-                  <Link to={`${section.listPath}/${editId}`}>{item.title}</Link>
-                </td>
-                <td>{item.bank_name || '—'}</td>
-                <td>{item.product_type || item.catalog_label || '—'}</td>
-                <td>{item.apr_rate != null ? `${item.apr_rate}%` : item.rate_label || '—'}</td>
-                <td>{item.active ? 'Да' : 'Нет'}</td>
-                <td>{item.featured ? 'Да' : 'Нет'}</td>
-                <td>
-                  <StatusBadge status={item.status} />
-                </td>
-                <td>
-                  <div className="cms-table__actions">
-                    <button
-                      type="button"
-                      className="admin-btn admin-btn--ghost"
-                      onClick={() => navigate(`${section.listPath}/${editId}`)}
-                    >
-                      Открыть
-                    </button>
-                    {!isSite && item.status !== 'published' ? (
-                      <button type="button" className="admin-btn admin-btn--ghost" onClick={() => cmsPublish('products', item.id).then(load)}>
-                        Опубликовать
+                <tr key={item.id}>
+                  <td>
+                    <Link to={`${section.listPath}/${editId}`}>{item.title}</Link>
+                  </td>
+                  <td>{item.bank_name || '—'}</td>
+                  <td>{item.product_type || item.catalog_label || '—'}</td>
+                  <td>{item.apr_rate != null ? `${item.apr_rate}%` : item.rate_label || '—'}</td>
+                  <td>{item.active ? 'Да' : 'Нет'}</td>
+                  <td>{item.featured ? 'Да' : 'Нет'}</td>
+                  <td>
+                    <StatusBadge status={item.status} />
+                  </td>
+                  <td>
+                    <div className="cms-table__actions">
+                      <button
+                        type="button"
+                        className="admin-btn admin-btn--ghost"
+                        onClick={() => navigate(`${section.listPath}/${editId}`)}
+                      >
+                        Открыть
                       </button>
-                    ) : null}
-                    {!isSite && item.status === 'published' ? (
-                      <button type="button" className="admin-btn admin-btn--ghost" onClick={() => cmsUnpublish('products', item.id).then(load)}>
-                        Снять
+                      {item.status !== 'published' ? (
+                        <button
+                          type="button"
+                          className="admin-btn admin-btn--ghost"
+                          onClick={() => cmsPublish('products', item.id).then(load)}
+                        >
+                          Опубликовать
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          className="admin-btn admin-btn--ghost"
+                          onClick={() => cmsUnpublish('products', item.id).then(load)}
+                        >
+                          Снять
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className="admin-btn admin-btn--ghost"
+                        onClick={() => cmsArchive('products', item.id).then(load)}
+                      >
+                        В архив
                       </button>
-                    ) : null}
-                    {!isSite ? (
-                      <>
-                        <button type="button" className="admin-btn admin-btn--ghost" onClick={() => cmsArchive('products', item.id).then(load)}>
-                          В архив
-                        </button>
-                        <button type="button" className="admin-btn admin-btn--danger" onClick={() => setDeleteId(item.id)}>
-                          Удалить
-                        </button>
-                      </>
-                    ) : null}
-                  </div>
-                </td>
-              </tr>
+                      <button
+                        type="button"
+                        className="admin-btn admin-btn--danger"
+                        onClick={() => setDeleteId(item.id)}
+                      >
+                        Удалить
+                      </button>
+                    </div>
+                  </td>
+                </tr>
               );
             })}
           </tbody>
@@ -170,7 +181,7 @@ const CmsProductsList = ({ sectionKey }) => {
       <ConfirmDialog
         open={Boolean(deleteId)}
         title="Удалить продукт?"
-        text="Продукт будет скрыт из CMS."
+        text="Продукт будет скрыт из CMS и с сайта."
         onClose={() => setDeleteId(null)}
         onConfirm={onDelete}
       />

@@ -1,6 +1,7 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchCalculatorConfig } from '../data/productsRuntimeApi';
+import { formatTermValue, termUnitShort, unpackCalculatorPurposes } from '../utils/termUnit';
 import './Calculator.css';
 
 const PURPOSE_OPTIONS = [
@@ -25,39 +26,43 @@ const Calculator = ({
     minTerm: 6,
     maxTerm: 84,
     rate: 0.008,
+    termUnit: 'month',
     purposes: PURPOSE_OPTIONS,
   });
   const [sum, setSum] = useState(500000);
-  const [months, setMonths] = useState(36);
+  const [term, setTerm] = useState(36);
   const [purpose, setPurpose] = useState('Любая цель');
   const [purposeOpen, setPurposeOpen] = useState(false);
   const purposeRef = useRef(null);
   const purposeListId = useId();
   const rate = config.rate;
-  const days = months * 30;
+  const days = config.termUnit === 'day' ? term : term * 30;
+  const periodCount = config.termUnit === 'day' ? Math.max(1, Math.ceil(term / 30)) : Math.max(1, term);
 
   const interest = sum * rate * days;
   const total = sum + interest;
-  const monthly = total / Math.max(1, months);
+  const monthly = total / periodCount;
   const sumProgress = ((sum - config.minAmount) / Math.max(1, config.maxAmount - config.minAmount)) * 100;
-  const monthsProgress = ((months - config.minTerm) / Math.max(1, config.maxTerm - config.minTerm)) * 100;
+  const termProgress = ((term - config.minTerm) / Math.max(1, config.maxTerm - config.minTerm)) * 100;
 
   useEffect(() => {
     let cancelled = false;
     fetchCalculatorConfig(configKey)
       .then((data) => {
         if (!data || cancelled) return;
+        const { purposes, termUnit } = unpackCalculatorPurposes(data.purposes, 'month');
         const nextConfig = {
           minAmount: Number(data.min_amount ?? 50000),
           maxAmount: Number(data.max_amount ?? 5000000),
           minTerm: Number(data.min_term ?? 6),
           maxTerm: Number(data.max_term ?? 84),
           rate: Number(data.rate ?? 0.008),
-          purposes: Array.isArray(data.purposes) && data.purposes.length ? data.purposes : PURPOSE_OPTIONS,
+          termUnit,
+          purposes: purposes.length ? purposes : PURPOSE_OPTIONS,
         };
         setConfig(nextConfig);
         setSum(Number(data.default_amount ?? nextConfig.minAmount));
-        setMonths(Number(data.default_term ?? nextConfig.minTerm));
+        setTerm(Number(data.default_term ?? nextConfig.minTerm));
         setPurpose(data.default_purpose || nextConfig.purposes[0] || 'Любая цель');
       })
       .catch(() => {});
@@ -119,22 +124,26 @@ const Calculator = ({
         <div className="calc__label-row">
           <span className="calc__label">Срок</span>
         </div>
-        <div className="calc__amount">{months} месяцев</div>
+        <div className="calc__amount">{formatTermValue(term, config.termUnit)}</div>
         <input
           type="range"
           min={config.minTerm}
           max={config.maxTerm}
           step="1"
-          value={months}
-          onChange={(e) => setMonths(Number(e.target.value))}
+          value={term}
+          onChange={(e) => setTerm(Number(e.target.value))}
           className="calc__slider"
-          style={{ '--progress': `${monthsProgress}%` }}
+          style={{ '--progress': `${termProgress}%` }}
           aria-label="Срок кредита"
         />
         {showRangeLabels ? (
           <div className="calc__range">
-            <span>{config.minTerm} мес.</span>
-            <span>{config.maxTerm} мес.</span>
+            <span>
+              {config.minTerm} {termUnitShort(config.termUnit)}
+            </span>
+            <span>
+              {config.maxTerm} {termUnitShort(config.termUnit)}
+            </span>
           </div>
         ) : null}
       </div>
@@ -197,7 +206,9 @@ const Calculator = ({
       <div className="calc__result">
         <div className="calc__result-row">
           <div className="calc__result-item">
-            <span className="calc__result-label">Ежемесячный платёж от</span>
+            <span className="calc__result-label">
+              {config.termUnit === 'day' ? 'Платёж от' : 'Ежемесячный платёж от'}
+            </span>
             <strong className="calc__result-value calc__result-value--accent">
               {monthly.toLocaleString('ru-RU', { maximumFractionDigits: 0 })} ₽
             </strong>

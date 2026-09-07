@@ -65,7 +65,6 @@ export const fetchCatalogProducts = async (categorySlug) => {
       catalogCache.set(categorySlug, { at: Date.now(), data: result });
       return result;
     })
-    .catch(() => [])
     .finally(() => {
       catalogInflight.delete(categorySlug);
     });
@@ -88,7 +87,6 @@ export const fetchOfferBySlug = async (slug) => {
       offerCache.set(slug, { at: Date.now(), data: result });
       return result;
     })
-    .catch(() => null)
     .finally(() => {
       offerInflight.delete(slug);
     });

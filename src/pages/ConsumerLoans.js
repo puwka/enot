@@ -1,4 +1,5 @@
 import CatalogPage from '../components/CatalogPage';
+import { useCatalogProducts } from '../hooks/useCatalogProducts';
 import rus from '../images/rus.webp';
 import sov from '../images/sov.webp';
 import ren from '../images/renesans.webp';
@@ -26,17 +27,21 @@ export const CONSUMER_LOANS_CATALOG = {
   items: CONSUMER_LOANS_ITEMS,
 };
 
-const ConsumerLoans = () => (
-  <CatalogPage
-    title="Потребительские кредиты"
-    description="Сравните ставки и условия банков по кредитам наличными и рефинансированию."
-    variant="loan"
-    catalogPath="/consumer-loans"
-    catalogLabel="Потребительские кредиты"
-    catalogPrefix="consumer"
-    items={CONSUMER_LOANS_ITEMS}
-    ctaLabel="Подробнее"
-  />
-);
+const ConsumerLoans = () => {
+  const items = useCatalogProducts('consumer-loans', CONSUMER_LOANS_ITEMS);
+
+  return (
+    <CatalogPage
+      title="Потребительские кредиты"
+      description="Сравните ставки и условия банков по кредитам наличными и рефинансированию."
+      variant="loan"
+      catalogPath="/consumer-loans"
+      catalogLabel="Потребительские кредиты"
+      catalogPrefix="consumer"
+      items={items}
+      ctaLabel="Подробнее"
+    />
+  );
+};
 
 export default ConsumerLoans;

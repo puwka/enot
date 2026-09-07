@@ -2,6 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAdminAuth } from '../AdminAuthContext';
 import { cmsCreate, cmsDelete, cmsList, cmsUpdate } from '../cms/cmsApi';
 import { CmsAlert, CmsLoading, ConfirmDialog, StatusBadge } from '../cms/CmsUi';
+import {
+  TERM_UNITS,
+  normalizeTermUnit,
+  packCalculatorPurposes,
+  termUnitShort,
+  unpackCalculatorPurposes,
+} from '../../utils/termUnit';
 import '../cms/Cms.css';
 
 const emptyForm = {
@@ -10,8 +17,9 @@ const emptyForm = {
   title: 'Калькулятор кредита',
   min_amount: 50000,
   max_amount: 5000000,
-  min_term: 6,
+  min_term: 1,
   max_term: 84,
+  term_unit: 'month',
   rate: 0.008,
   default_amount: 500000,
   default_term: 36,
@@ -55,6 +63,7 @@ const CmsCalculatorSettings = () => {
     setSaving(true);
     setError('');
     try {
+      const purposeLines = form.purposes_text.split('\n').map((row) => row.trim()).filter(Boolean);
       const payload = {
         key: form.key.trim(),
         title: form.title.trim(),
@@ -66,7 +75,7 @@ const CmsCalculatorSettings = () => {
         default_amount: Number(form.default_amount),
         default_term: Number(form.default_term),
         default_purpose: form.default_purpose.trim() || null,
-        purposes: form.purposes_text.split('\n').map((row) => row.trim()).filter(Boolean),
+        purposes: packCalculatorPurposes(purposeLines, form.term_unit),
         formula_locked: Boolean(form.formula_locked),
         status: form.status,
         sort_order: Number(form.sort_order || 0),
@@ -100,6 +109,29 @@ const CmsCalculatorSettings = () => {
   };
 
   const canSubmit = useMemo(() => form.key.trim() && form.title.trim(), [form.key, form.title]);
+
+  const fillForm = (item) => {
+    const { purposes, termUnit } = unpackCalculatorPurposes(item.purposes, 'month');
+    setForm({
+      id: item.id,
+      key: item.key || '',
+      title: item.title || '',
+      min_amount: item.min_amount ?? 50000,
+      max_amount: item.max_amount ?? 5000000,
+      min_term: item.min_term ?? 1,
+      max_term: item.max_term ?? 84,
+      term_unit: normalizeTermUnit(termUnit, 'month'),
+      rate: item.rate ?? 0.008,
+      default_amount: item.default_amount ?? 500000,
+      default_term: item.default_term ?? 36,
+      default_purpose: item.default_purpose || '',
+      purposes_text: purposes.join('\n'),
+      formula: item.formula || 'simple_interest',
+      formula_locked: Boolean(item.formula_locked),
+      status: item.status || 'published',
+      sort_order: item.sort_order ?? 0,
+    });
+  };
 
   if (loading) return <CmsLoading />;
 
@@ -135,14 +167,39 @@ const CmsCalculatorSettings = () => {
         </div>
         <div className="cms-form__grid">
           <label className="cms-field">
-            <span>Срок от (мес.)</span>
-            <input type="number" value={form.min_term} onChange={(e) => setForm((prev) => ({ ...prev, min_term: e.target.value }))} />
+            <span>Срок от</span>
+            <input
+              type="number"
+              min="1"
+              step="1"
+              value={form.min_term}
+              onChange={(e) => setForm((prev) => ({ ...prev, min_term: e.target.value }))}
+            />
           </label>
           <label className="cms-field">
-            <span>Срок до (мес.)</span>
-            <input type="number" value={form.max_term} onChange={(e) => setForm((prev) => ({ ...prev, max_term: e.target.value }))} />
+            <span>Срок до</span>
+            <input
+              type="number"
+              min="1"
+              step="1"
+              value={form.max_term}
+              onChange={(e) => setForm((prev) => ({ ...prev, max_term: e.target.value }))}
+            />
           </label>
         </div>
+        <label className="cms-field">
+          <span>Единица срока</span>
+          <select
+            value={form.term_unit}
+            onChange={(e) => setForm((prev) => ({ ...prev, term_unit: e.target.value }))}
+          >
+            {TERM_UNITS.map((unit) => (
+              <option key={unit.value} value={unit.value}>
+                {unit.label} (от 1)
+              </option>
+            ))}
+          </select>
+        </label>
         <div className="cms-form__grid">
           <label className="cms-field">
             <span>Ставка (доля, напр. 0.008 = 0.8%)</span>
@@ -152,7 +209,7 @@ const CmsCalculatorSettings = () => {
             <span>Значения по умолчанию (сумма / срок)</span>
             <div className="cms-form__grid">
               <input type="number" value={form.default_amount} onChange={(e) => setForm((prev) => ({ ...prev, default_amount: e.target.value }))} />
-              <input type="number" value={form.default_term} onChange={(e) => setForm((prev) => ({ ...prev, default_term: e.target.value }))} />
+              <input type="number" min="1" value={form.default_term} onChange={(e) => setForm((prev) => ({ ...prev, default_term: e.target.value }))} />
             </div>
           </label>
         </div>
@@ -216,46 +273,28 @@ const CmsCalculatorSettings = () => {
           </tr>
         </thead>
         <tbody>
-          {items.map((item) => (
-            <tr key={item.id}>
-              <td>{item.key}</td>
-              <td>{item.title}</td>
-              <td>{item.rate}</td>
-              <td>{`${item.min_amount} - ${item.max_amount} / ${item.min_term}-${item.max_term}`}</td>
-              <td><StatusBadge status={item.status} /></td>
-              <td>
-                <div className="cms-table__actions">
-                  <button
-                    type="button"
-                    className="admin-btn admin-btn--ghost"
-                    onClick={() => setForm({
-                      id: item.id,
-                      key: item.key || '',
-                      title: item.title || '',
-                      min_amount: item.min_amount ?? 50000,
-                      max_amount: item.max_amount ?? 5000000,
-                      min_term: item.min_term ?? 6,
-                      max_term: item.max_term ?? 84,
-                      rate: item.rate ?? 0.008,
-                      default_amount: item.default_amount ?? 500000,
-                      default_term: item.default_term ?? 36,
-                      default_purpose: item.default_purpose || '',
-                      purposes_text: Array.isArray(item.purposes) ? item.purposes.join('\n') : '',
-                      formula: item.formula || 'simple_interest',
-                      formula_locked: Boolean(item.formula_locked),
-                      status: item.status || 'published',
-                      sort_order: item.sort_order ?? 0,
-                    })}
-                  >
-                    Изменить
-                  </button>
-                  <button type="button" className="admin-btn admin-btn--danger" onClick={() => setDeleteId(item.id)}>
-                    Удалить
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))}
+          {items.map((item) => {
+            const { termUnit } = unpackCalculatorPurposes(item.purposes, 'month');
+            return (
+              <tr key={item.id}>
+                <td>{item.key}</td>
+                <td>{item.title}</td>
+                <td>{item.rate}</td>
+                <td>{`${item.min_amount} - ${item.max_amount} / ${item.min_term}-${item.max_term} ${termUnitShort(termUnit)}`}</td>
+                <td><StatusBadge status={item.status} /></td>
+                <td>
+                  <div className="cms-table__actions">
+                    <button type="button" className="admin-btn admin-btn--ghost" onClick={() => fillForm(item)}>
+                      Изменить
+                    </button>
+                    <button type="button" className="admin-btn admin-btn--danger" onClick={() => setDeleteId(item.id)}>
+                      Удалить
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
       <ConfirmDialog

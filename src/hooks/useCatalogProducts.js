@@ -1,17 +1,14 @@
 import { useEffect, useState } from 'react';
 import { fetchCatalogProducts } from '../data/productsRuntimeApi';
 
-const itemKey = (item) => String(item?.slug || item?.link || item?.id || item?.title || item?.bank || item?.nameis || '');
-
-/** Merge CMS products over static catalog: CMS first, then unique static leftovers. */
-export const mergeCatalogItems = (staticItems = [], cmsItems = []) => {
+/**
+ * Prefer CMS catalog exclusively when API responds.
+ * Static hardcoded items are only a fallback if the API is unavailable.
+ */
+export const mergeCatalogItems = (staticItems = [], cmsItems = [], { apiOk = false } = {}) => {
+  if (apiOk) return cmsItems;
   if (!cmsItems.length) return staticItems;
-  const seen = new Set(cmsItems.map(itemKey).filter(Boolean));
-  const extras = staticItems.filter((item) => {
-    const key = itemKey(item);
-    return key && !seen.has(key);
-  });
-  return [...cmsItems, ...extras];
+  return cmsItems;
 };
 
 export const useCatalogProducts = (categorySlug, staticItems) => {
@@ -28,9 +25,12 @@ export const useCatalogProducts = (categorySlug, staticItems) => {
       fetchCatalogProducts(categorySlug)
         .then((rows) => {
           if (cancelled) return;
-          setItems(mergeCatalogItems(staticItems, rows));
+          setItems(mergeCatalogItems(staticItems, rows, { apiOk: true }));
         })
-        .catch(() => {});
+        .catch(() => {
+          if (cancelled) return;
+          setItems(staticItems);
+        });
     };
 
     if (typeof window.requestIdleCallback === 'function') {

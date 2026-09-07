@@ -13,38 +13,39 @@ import './OfferDetail.css';
 
 const OfferDetail = () => {
   const { slug } = useParams();
-  const [runtimeOffer, setRuntimeOffer] = useState(undefined);
-  const [runtimeRelated, setRuntimeRelated] = useState([]);
-  const staticOffer = useMemo(() => getOfferBySlug(decodeURIComponent(slug || '')), [slug]);
-  const offer = runtimeOffer === undefined ? staticOffer : runtimeOffer || staticOffer;
-  const relatedFallback = useMemo(() => getRelatedOffers(offer, 4), [offer]);
-  const related = runtimeRelated.length ? runtimeRelated : relatedFallback;
+  const [offer, setOffer] = useState(null);
+  const [related, setRelated] = useState([]);
+  const [loading, setLoading] = useState(true);
   const content = useMemo(() => (offer ? buildOfferContent(offer) : null), [offer]);
-  const [loading, setLoading] = useState(!staticOffer);
 
   useEffect(() => {
     let cancelled = false;
     const decodedSlug = decodeURIComponent(slug || '');
-    setRuntimeOffer(undefined);
-    setRuntimeRelated([]);
-    setLoading(!getOfferBySlug(decodedSlug));
+    setOffer(null);
+    setRelated([]);
+    setLoading(true);
 
     fetchOfferBySlug(decodedSlug)
       .then(async (dbOffer) => {
         if (cancelled) return;
-        setRuntimeOffer(dbOffer);
-        const knownOffer = dbOffer || getOfferBySlug(decodedSlug);
-        const categorySlug = knownOffer ? CATALOG_PATH_TO_CATEGORY_SLUG[knownOffer.catalogPath] : null;
+        setOffer(dbOffer);
+        const categorySlug = dbOffer ? CATALOG_PATH_TO_CATEGORY_SLUG[dbOffer.catalogPath] : null;
         if (categorySlug) {
           const relatedItems = await fetchRelatedOffersByCategory(categorySlug, decodedSlug, 4).catch(() => []);
-          if (!cancelled && relatedItems.length) setRuntimeRelated(relatedItems);
+          if (!cancelled && relatedItems.length) setRelated(relatedItems);
         }
       })
-      .catch(() => {
-        if (!cancelled) {
-          setRuntimeOffer(null);
-          setRuntimeRelated([]);
+      .catch((err) => {
+        if (cancelled) return;
+        // API down → static fallback; 404 → product really gone
+        if (err?.status === 404 || err?.code === 'NOT_FOUND') {
+          setOffer(null);
+          setRelated([]);
+          return;
         }
+        const fallback = getOfferBySlug(decodedSlug);
+        setOffer(fallback);
+        setRelated(fallback ? getRelatedOffers(fallback, 4) : []);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

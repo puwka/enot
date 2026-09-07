@@ -7,6 +7,7 @@ export const PRODUCT_SECTIONS = {
     listPath: '/admin/products/loans',
     paths: ['/loans'],
     formVariant: 'loan',
+    defaultTermUnit: 'day',
     heroEyebrow: 'Микрозайм',
     conditionFields: [
       { key: 'age', label: 'Возраст' },
@@ -28,6 +29,7 @@ export const PRODUCT_SECTIONS = {
     listPath: '/admin/products/consumer-loans',
     paths: ['/consumer-loans'],
     formVariant: 'loan',
+    defaultTermUnit: 'month',
     heroEyebrow: 'Потребительский кредит',
     conditionFields: [
       { key: 'age', label: 'Возраст' },
@@ -49,6 +51,7 @@ export const PRODUCT_SECTIONS = {
     listPath: '/admin/products/collateral-loans',
     paths: ['/collateral-loans'],
     formVariant: 'loan',
+    defaultTermUnit: 'month',
     heroEyebrow: 'Кредит под залог',
     conditionFields: [
       { key: 'age', label: 'Возраст' },
