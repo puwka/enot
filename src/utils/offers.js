@@ -25,7 +25,7 @@ export const enrichOffers = (items, meta) => {
       benefit1: item.benefit1 || item.opis || '',
       benefit2: item.benefit2 || item.opis1 || '',
       benefit3: item.benefit3 || item.opis2 || '',
-      spec: item.spec || '',
+      spec: item.spec || item.product_type || '',
       rate: item.rate || '',
       sum: item.sum || '',
       term: item.term || '',
@@ -93,7 +93,8 @@ const buildSpecs = (offer, section) => {
   }
   if (mode === 'education') {
     return [
-      { label: 'Направление', value: offer.title || '—' },
+      { label: 'Школа', value: offer.title || offer.bank || '—' },
+      { label: 'Направление', value: offer.spec || '—' },
       { label: 'Формат', value: attrs.education_format || '—' },
       { label: 'Старт', value: attrs.education_start || '—' },
     ];

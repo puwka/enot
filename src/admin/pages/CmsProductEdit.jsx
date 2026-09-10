@@ -514,20 +514,10 @@ const CmsProductEdit = ({ sectionKey }) => {
                   ))}
                 </select>
               </label>
-              <div className="cms-form__grid">
-                <label className="cms-field">
-                  <span>Ежемесячный платёж</span>
-                  <input
-                    type="number"
-                    value={form.monthly_payment}
-                    onChange={(e) => setForm((prev) => ({ ...prev, monthly_payment: e.target.value }))}
-                  />
-                </label>
-                <label className="cms-field">
-                  <span>Комиссия</span>
-                  <input value={form.commission} onChange={(e) => setForm((prev) => ({ ...prev, commission: e.target.value }))} />
-                </label>
-              </div>
+              <label className="cms-field">
+                <span>Комиссия</span>
+                <input value={form.commission} onChange={(e) => setForm((prev) => ({ ...prev, commission: e.target.value }))} />
+              </label>
             </div>
           ) : null}
 

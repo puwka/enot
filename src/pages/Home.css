@@ -492,6 +492,15 @@
   gap: 8px;
 }
 
+.home-table__actions--mobile {
+  margin-top: 12px;
+  justify-content: stretch;
+}
+
+.home-table__actions--mobile .home-btn {
+  flex: 1;
+}
+
 .home-fav {
   display: inline-flex;
   align-items: center;

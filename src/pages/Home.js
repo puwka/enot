@@ -85,12 +85,8 @@ const OFFER_TAB_KEYS = [
 
 const mapCmsToHomeItem = (row) => ({
   bank: row.bank || row.title,
-  type: row.spec || row.catalogLabel || '',
+  type: row.spec || row.product_type || row.catalogLabel || '',
   image: row.image,
-  rate: row.rate || row.benefit1 || '—',
-  sum: row.sum || row.benefit2 || '—',
-  term: row.term || row.benefit3 || '—',
-  payment: row.payment || '—',
   link: row.link,
   slug: row.slug,
   id: row.id || row.slug,
@@ -114,9 +110,6 @@ const Home = () => {
     title: item.title || item.bank,
     image: item.image,
     link: item.link,
-    rate: item.rate,
-    sum: item.sum,
-    term: item.term,
     catalogPath: item.catalogPath || current.allTo,
     catalogLabel: item.catalogLabel || current.label,
     slug: item.slug || undefined,
@@ -396,11 +389,7 @@ const Home = () => {
             <table className="home-table">
               <thead>
                 <tr>
-                  <th>Банк</th>
-                  <th>Ставка от</th>
-                  <th>Сумма</th>
-                  <th>Срок</th>
-                  <th>Ежемесячный платёж</th>
+                  <th>Название</th>
                   <th />
                 </tr>
               </thead>
@@ -425,10 +414,6 @@ const Home = () => {
                         </div>
                       </div>
                     </td>
-                    <td><strong>{item.rate}</strong></td>
-                    <td><strong>{item.sum}</strong></td>
-                    <td><strong>{item.term}</strong></td>
-                    <td><strong>{item.payment}</strong></td>
                     <td>
                       <div className="home-table__actions">
                         {detailTo ? (
@@ -461,6 +446,8 @@ const Home = () => {
           <div className="home-offer-mobile" key={`m-${activeTab}`} hidden={!current.items.length}>
             {current.items.map((item, index) => {
               const detailTo = item.slug ? `/offer/${encodeURIComponent(item.slug)}` : null;
+              const payload = favoritePayload(item);
+              const fav = isFavorite(payload);
               return (
               <article
                 key={`m-${activeTab}-${item.slug || item.bank}-${index}`}
@@ -475,21 +462,26 @@ const Home = () => {
                     <span>{item.type}</span>
                   </div>
                 </div>
-                <div className="home-offer-mobile__grid">
-                  <div><span>Ставка от</span><strong>{item.rate}</strong></div>
-                  <div><span>Сумма</span><strong>{item.sum}</strong></div>
-                  <div><span>Срок</span><strong>{item.term}</strong></div>
-                  <div><span>Ежемесячный платёж</span><strong>{item.payment}</strong></div>
+                <div className="home-table__actions home-table__actions--mobile">
+                  {detailTo ? (
+                    <Link to={detailTo} className="home-btn home-btn--primary home-btn--block">
+                      Подробнее
+                    </Link>
+                  ) : (
+                    <a href={item.link} target="_blank" rel="noopener noreferrer" className="home-btn home-btn--primary home-btn--block">
+                      Подробнее
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    className={`home-fav${fav ? ' is-active' : ''}`}
+                    aria-label={fav ? 'Убрать из избранного' : 'В избранное'}
+                    aria-pressed={fav}
+                    onClick={() => toggleFavorite(payload)}
+                  >
+                    <HeartIcon filled={fav} size={18} />
+                  </button>
                 </div>
-                {detailTo ? (
-                  <Link to={detailTo} className="home-btn home-btn--primary home-btn--block">
-                    Подробнее
-                  </Link>
-                ) : (
-                  <a href={item.link} target="_blank" rel="noopener noreferrer" className="home-btn home-btn--primary home-btn--block">
-                    Подробнее
-                  </a>
-                )}
               </article>
               );
             })}

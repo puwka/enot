@@ -35,6 +35,11 @@ const SORT_OPTIONS = {
     { value: 'name-asc', label: 'По названию А–Я' },
     { value: 'name-desc', label: 'По названию Я–А' },
   ],
+  credit: [
+    { value: 'default', label: 'По умолчанию' },
+    { value: 'name-asc', label: 'По названию А–Я' },
+    { value: 'name-desc', label: 'По названию Я–А' },
+  ],
   job: [
     { value: 'default', label: 'По умолчанию' },
     { value: 'name-asc', label: 'По названию А–Я' },
@@ -64,6 +69,9 @@ const COLUMNS = {
     { key: 'sum', label: 'Сумма' },
     { key: 'term', label: 'Срок' },
   ],
+  credit: [
+    { key: 'title', label: 'Карта' },
+  ],
   debit: [
     { key: 'title', label: 'Карта' },
     { key: 'benefit1', label: 'Преимущество' },
@@ -75,7 +83,8 @@ const COLUMNS = {
     { key: 'spec', label: 'Направление' },
   ],
   education: [
-    { key: 'title', label: 'Направление' },
+    { key: 'title', label: 'Школа' },
+    { key: 'spec', label: 'Направление' },
   ],
   service: [
     { key: 'title', label: 'Сервис' },
@@ -200,6 +209,11 @@ const CatalogPage = ({
         <div><span>Направление</span><strong>{item.spec}</strong></div>
       );
     }
+    if (variant === 'education') {
+      return (
+        <div><span>Направление</span><strong>{item.spec}</strong></div>
+      );
+    }
     if (variant === 'shop') {
       return (
         <>
@@ -290,7 +304,7 @@ const CatalogPage = ({
                 {columns.map((column) => (
                   <th key={column.key}>{column.label}</th>
                 ))}
-                <th className="catalog-table__actions-h">Действия</th>
+                <th className="catalog-table__actions-h">{variant === 'credit' ? '' : 'Действия'}</th>
               </tr>
             </thead>
             <tbody>

@@ -20,7 +20,7 @@ export const AUTO_LOANS_ITEMS = [
 export const AUTO_LOANS_CATALOG = {
   path: '/auto-loans',
   label: 'Кредитные карты',
-  variant: 'loan',
+  variant: 'credit',
   prefix: 'cards-credit',
   ctaLabel: 'Подробнее',
   items: AUTO_LOANS_ITEMS,
@@ -33,7 +33,7 @@ const AutoLoans = () => {
     <CatalogPage
       title="Кредитные карты"
       description="Лимиты, льготный период и рассрочка — сравните предложения банков в одном списке."
-      variant="loan"
+      variant="credit"
       catalogPath="/auto-loans"
       catalogLabel="Кредитные карты"
       catalogPrefix="cards-credit"
