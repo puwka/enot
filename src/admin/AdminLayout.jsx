@@ -334,6 +334,9 @@ const AdminLayout = () => {
           </div>
 
           <div className="cms-header__right">
+            <a href="/" target="_blank" rel="noopener noreferrer" className="admin-btn admin-btn--ghost">
+              На сайт
+            </a>
             <div className="cms-search">
               <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
                 <circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" strokeWidth="1.6" />

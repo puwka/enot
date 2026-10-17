@@ -1,0 +1,52 @@
+.rte-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rte-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.rte-toolbar__btn {
+  border: 1px solid #d5dce8;
+  background: #fff;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #24324d;
+  cursor: pointer;
+}
+
+.rte-toolbar__btn:hover {
+  border-color: #12b5a2;
+  color: #0d9b8a;
+}
+
+.rte-editor {
+  border: 1px solid #d5dce8;
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: #fff;
+  line-height: 1.5;
+  outline: none;
+}
+
+.rte-editor:focus {
+  border-color: #12b5a2;
+  box-shadow: 0 0 0 3px rgba(18, 181, 162, 0.12);
+}
+
+.rte-editor ul,
+.rte-editor ol {
+  padding-left: 1.2rem;
+  margin: 0.4rem 0;
+}
+
+.rte-editor h3 {
+  margin: 0.4rem 0;
+  font-size: 1.05rem;
+}

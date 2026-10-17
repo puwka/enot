@@ -54,7 +54,9 @@ import CmsProductEdit from './admin/pages/CmsProductEdit';
 import CmsBanksList from './admin/pages/CmsBanksList';
 import CmsCategoriesList from './admin/pages/CmsCategoriesList';
 import CmsCalculatorSettings from './admin/pages/CmsCalculatorSettings';
-import { MetrikaCounter } from 'react-metrika';
+import CmsSiteSettings from './admin/pages/CmsSiteSettings';
+import CmsAuditPage from './admin/pages/CmsAuditPage';
+import { SiteSettingsProvider } from './context/SiteSettingsContext';
 import PwaShell from './components/pwa/PwaShell';
 import * as serviceWorkerRegistration from './pwa/serviceWorkerRegistration';
 import './App.css';
@@ -98,14 +100,14 @@ function App() {
 
   return (
     <>
-      <MetrikaCounter id={108751085} />
       <PwaShell updateRegistration={updateAvailable} />
       <BrowserRouter>
         <ScrollToTop />
-        <AuthProvider>
-          <AdminAuthProvider>
-            <PublicShell>
-              <Routes>
+        <SiteSettingsProvider>
+          <AuthProvider>
+            <AdminAuthProvider>
+              <PublicShell>
+                <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/loans" element={<Loans />} />
                 <Route path="/settlement-accounts" element={<SettlementAccounts />} />
@@ -425,23 +427,30 @@ function App() {
                       </AdminRoleRoute>
                     }
                   />
-                  <Route path="users" element={adminPage('users', 'users')} />
-                  <Route path="applications" element={adminPage('users', 'applications')} />
-                  <Route path="bonuses" element={adminPage('bonuses', 'bonuses')} />
-                  <Route path="referrals" element={adminPage('users', 'referrals')} />
                   <Route path="media" element={adminPage('media', 'media')} />
-                  <Route path="settings/site" element={adminPage('settings', 'settings-site')} />
-                  <Route path="settings/header" element={adminPage('settings', 'settings-header')} />
-                  <Route path="settings/footer" element={adminPage('settings', 'settings-footer')} />
-                  <Route path="settings/menu" element={adminPage('settings', 'settings-menu')} />
-                  <Route path="settings/seo" element={adminPage('settings', 'settings-seo')} />
-                  <Route path="system/audit" element={adminPage('system', 'audit')} />
+                  <Route
+                    path="settings/site"
+                    element={
+                      <AdminRoleRoute permission="settings">
+                        <CmsSiteSettings />
+                      </AdminRoleRoute>
+                    }
+                  />
+                  <Route
+                    path="system/audit"
+                    element={
+                      <AdminRoleRoute permission="system">
+                        <CmsAuditPage />
+                      </AdminRoleRoute>
+                    }
+                  />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>
-            </PublicShell>
-          </AdminAuthProvider>
-        </AuthProvider>
+              </PublicShell>
+            </AdminAuthProvider>
+          </AuthProvider>
+        </SiteSettingsProvider>
       </BrowserRouter>
     </>
   );

@@ -1,23 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { adminDashboard } from '../adminApi';
+import { apiFetch } from '../../lib/apiClient';
+import { useAdminAuth } from '../AdminAuthContext';
+import { useSiteSettings } from '../../context/SiteSettingsContext';
 
 const formatNumber = (value) =>
   new Intl.NumberFormat('ru-RU').format(Math.max(0, Number(value) || 0));
-
-const formatDateTime = (value) => {
-  if (!value) return '—';
-  try {
-    return new Intl.DateTimeFormat('ru-RU', {
-      day: 'numeric',
-      month: 'short',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(new Date(value));
-  } catch {
-    return '—';
-  }
-};
 
 const SkeletonBlock = () => (
   <div className="cms-dash-skeleton" aria-hidden="true">
@@ -33,28 +21,33 @@ const EmptyList = ({ text }) => (
   </div>
 );
 
-const ActivityList = ({ items, emptyText }) => {
+const BarList = ({ items, emptyText }) => {
   if (!items?.length) return <EmptyList text={emptyText} />;
+  const max = Math.max(...items.map((item) => Number(item.clicks) || 0), 1);
   return (
-    <ul className="cms-dash-list">
-      {items.map((item) => (
-        <li key={item.id}>
-          <div>
-            <strong>{item.actor}</strong>
-            <span>
-              {item.action}
-              {item.meta ? ` · ${item.meta}` : ''}
-              {item.entity ? ` · ${item.entity}` : ''}
-            </span>
-          </div>
-          <em>{formatDateTime(item.at)}</em>
-        </li>
-      ))}
+    <ul className="cms-bar-list">
+      {items.map((item) => {
+        const clicks = Number(item.clicks) || 0;
+        const width = Math.max(4, Math.round((clicks / max) * 100));
+        return (
+          <li key={item.label}>
+            <div className="cms-bar-list__meta">
+              <strong>{item.label}</strong>
+              <em>{formatNumber(clicks)}</em>
+            </div>
+            <div className="cms-bar-list__track" aria-hidden="true">
+              <span style={{ width: `${width}%` }} />
+            </div>
+          </li>
+        );
+      })}
     </ul>
   );
 };
 
 const AdminDashboard = () => {
+  const { token } = useAdminAuth();
+  const { settings } = useSiteSettings();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -63,21 +56,19 @@ const AdminDashboard = () => {
     setLoading(true);
     setError('');
     try {
-      const payload = await adminDashboard();
+      const payload = await apiFetch('/site/admin/stats', { adminToken: token });
       setData(payload);
     } catch (err) {
       setData(null);
       if (err?.code === 'INVALID_SESSION') {
         setError('Сессия истекла. Войдите снова.');
-      } else if (err?.code === 'ADMIN_CONFIG_MISSING') {
-        setError('Supabase не настроен.');
       } else {
-        setError('Не удалось загрузить данные. Попробуйте обновить страницу.');
+        setError('Не удалось загрузить статистику. Попробуйте обновить страницу.');
       }
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [token]);
 
   useEffect(() => {
     load();
@@ -106,94 +97,93 @@ const AdminDashboard = () => {
     );
   }
 
-  const users = data?.users || { total: 0, today: 0, week: 0 };
-  const content = data?.content || { news: 0, articles: 0, pages: 0 };
-  const products = data?.products || { active: 0, inactive: 0 };
-  const bonuses = data?.bonuses || { turnover: 0, credited: 0, debited: 0 };
-  const userActivity = data?.userActivity || [];
-  const adminActivity = data?.adminActivity || [];
-  const recentChanges = data?.recentChanges || [];
-  const productsTotal = (Number(products.active) || 0) + (Number(products.inactive) || 0);
+  const catalog = data?.catalog || [];
+  const clicks = data?.clicks || { totals: {}, byBank: [], byCategory: [] };
+  const totals = clicks.totals || {};
+  const productsTotal = catalog.reduce((sum, row) => sum + (Number(row.total) || 0), 0);
+  const featuredTotal = catalog.reduce((sum, row) => sum + (Number(row.featured) || 0), 0);
+  const version = settings?.app?.version || '1.1.0';
 
   return (
     <div className="cms-dash">
       <div className="cms-dash-intro">
         <div>
-          <h2>Обзор за сегодня</h2>
-          <p>Сводка по пользователям, контенту и продуктам. Отсюда обычно начинают рабочий день.</p>
+          <h2>Обзор каталога и кликов</h2>
+          <p>
+            Сводка по опубликованным продуктам и переходам «Оформить». Версия продукта:{' '}
+            <strong>v{version}</strong>
+          </p>
         </div>
         <div className="cms-dash-intro__meta">
-          <span>Текущий месяц</span>
+          <span>Клики за 30 дней</span>
           <button type="button" className="admin-btn admin-btn--secondary" onClick={load}>
             Обновить
           </button>
-          <Link className="admin-btn admin-btn--primary" to="/admin/pages">
-            К страницам
+          <Link className="admin-btn admin-btn--primary" to="/admin/settings/site">
+            Настройки сайта
           </Link>
         </div>
       </div>
 
       <div className="cms-kpi">
         <article className="cms-kpi__item">
-          <span>Пользователи</span>
-          <strong>{formatNumber(users.total)}</strong>
-          <em>+{formatNumber(users.week)} за неделю</em>
-        </article>
-        <article className="cms-kpi__item">
-          <span>Новости</span>
-          <strong>{formatNumber(content.news)}</strong>
-          <em>
-            {formatNumber(content.articles)} статей · {formatNumber(content.pages)} страниц
-          </em>
-        </article>
-        <article className="cms-kpi__item">
-          <span>Продукты</span>
+          <span>Продукты в каталоге</span>
           <strong>{formatNumber(productsTotal)}</strong>
-          <em>{formatNumber(products.active)} активных</em>
+          <em>{formatNumber(featuredTotal)} в «Лучших»</em>
         </article>
         <article className="cms-kpi__item">
-          <span>Бонусы</span>
-          <strong>{formatNumber(bonuses.turnover)}</strong>
-          <em>{formatNumber(bonuses.credited)} начислено за период</em>
+          <span>Клики сегодня</span>
+          <strong>{formatNumber(totals.clicks_today)}</strong>
+          <em>{formatNumber(totals.clicks_week)} за неделю</em>
+        </article>
+        <article className="cms-kpi__item">
+          <span>Клики всего</span>
+          <strong>{formatNumber(totals.total_clicks)}</strong>
+          <em>по кнопкам оформления</em>
+        </article>
+        <article className="cms-kpi__item">
+          <span>Категорий</span>
+          <strong>{formatNumber(catalog.length)}</strong>
+          <em>с активными продуктами</em>
         </article>
       </div>
 
       <section>
         <div className="cms-dash-section__head">
-          <h2>Последние изменения</h2>
+          <h2>Продукты по категориям</h2>
         </div>
-        {recentChanges.length ? (
-          <ul className="cms-dash-list">
-            {recentChanges.map((item) => (
-              <li key={item.id}>
-                <div>
-                  <strong>{item.actor}</strong>
-                  <span>
-                    {item.action}
-                    {item.entity ? ` «${item.entity}»` : ''}
-                  </span>
-                </div>
-                <em>{formatDateTime(item.at)}</em>
-              </li>
+        {catalog.length ? (
+          <div className="cms-dash-table">
+            <div className="cms-dash-table__head">
+              <span>Категория</span>
+              <span>Всего</span>
+              <span>Лучшие</span>
+            </div>
+            {catalog.map((row) => (
+              <div className="cms-dash-table__row" key={row.slug}>
+                <strong>{row.title || row.slug}</strong>
+                <em>{formatNumber(row.total)}</em>
+                <em>{formatNumber(row.featured)}</em>
+              </div>
             ))}
-          </ul>
+          </div>
         ) : (
-          <EmptyList text="Изменений пока нет." />
+          <EmptyList text="В каталоге пока нет опубликованных продуктов." />
         )}
       </section>
 
       <div className="cms-dash__split">
         <section>
           <div className="cms-dash-section__head">
-            <h2>Активность пользователей</h2>
+            <h2>Клики по банкам</h2>
           </div>
-          <ActivityList items={userActivity} emptyText="Пока нет действий пользователей." />
+          <BarList items={clicks.byBank} emptyText="Кликов по банкам пока нет." />
         </section>
         <section>
           <div className="cms-dash-section__head">
-            <h2>Активность администраторов</h2>
+            <h2>Клики по категориям</h2>
           </div>
-          <ActivityList items={adminActivity} emptyText="Пока нет действий администраторов." />
+          <BarList items={clicks.byCategory} emptyText="Кликов по категориям пока нет." />
         </section>
       </div>
     </div>

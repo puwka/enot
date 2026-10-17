@@ -2,7 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import logoImage from '../images/logo.png';
 import { useFavorites } from '../hooks/useFavorites';
-import { useAuth } from '../context/AuthContext';
+import { useSiteSettings } from '../context/SiteSettingsContext';
 import HeartIcon from '../components/HeartIcon';
 import './Header.css';
 
@@ -163,27 +163,6 @@ const SEARCH_INDEX = [
     group: 'Информация',
   },
   {
-    to: '/account',
-    title: 'Личный кабинет',
-    description: 'Бонусы, история и настройки профиля',
-    keywords: ['кабинет', 'аккаунт', 'профиль', 'бонусы', 'вход'],
-    group: 'Аккаунт',
-  },
-  {
-    to: '/login',
-    title: 'Вход',
-    description: 'Авторизация в личный кабинет',
-    keywords: ['вход', 'логин', 'авторизация'],
-    group: 'Аккаунт',
-  },
-  {
-    to: '/register',
-    title: 'Регистрация',
-    description: 'Создать аккаунт ЕнотМани',
-    keywords: ['регистрация', 'аккаунт', 'создать'],
-    group: 'Аккаунт',
-  },
-  {
     to: '/Job',
     title: 'Вакансии',
     description: 'Актуальные вакансии компаний',
@@ -228,7 +207,9 @@ const Navbar = () => {
   const moreMenuRef = useRef(null);
   const searchId = useId();
   const { count: favoritesCount } = useFavorites();
-  const { isAuthenticated, user, logout } = useAuth();
+  const { settings } = useSiteSettings();
+  const brandLogo = settings?.brand?.logo_url || logoImage;
+  const brandName = settings?.brand?.name || 'ЕнотМани';
 
   const results = useMemo(() => {
     const query = searchQuery.trim();
@@ -348,8 +329,8 @@ const Navbar = () => {
       <div className="site-header__bar">
         <div className="site-header__inner">
           <Link to="/" className="site-header__brand" onClick={closeMenu}>
-            <img src={logoImage} alt="ЕнотМани" className="site-header__logo" />
-            <span className="site-header__brand-name">ЕнотМани</span>
+            <img src={brandLogo} alt={brandName} className="site-header__logo" />
+            <span className="site-header__brand-name">{brandName}</span>
           </Link>
 
           <nav className="site-header__nav" aria-label="Основная навигация">
@@ -421,33 +402,6 @@ const Navbar = () => {
                 <span className="site-header__badge">{favoritesCount}</span>
               ) : null}
             </button>
-
-            {isAuthenticated ? (
-              <button
-                type="button"
-                className="site-header__action site-header__action--account"
-                title="Личный кабинет"
-                onClick={() => navigate('/account')}
-              >
-                <span className="site-header__account-avatar" aria-hidden="true">
-                  {user?.avatar ? (
-                    <img src={user.avatar} alt="" />
-                  ) : (
-                    (user?.name || 'Е').trim().charAt(0).toUpperCase()
-                  )}
-                </span>
-                <span className="site-header__action-label">Кабинет</span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="site-header__action site-header__action--account site-header__action--login"
-                title="Войти"
-                onClick={() => navigate('/login')}
-              >
-                <span className="site-header__action-label">Войти</span>
-              </button>
-            )}
 
             <button
               type="button"
@@ -570,8 +524,8 @@ const Navbar = () => {
         <div className="site-header__drawer-panel" role="dialog" aria-modal="true" aria-label="Мобильное меню">
           <div className="site-header__drawer-top">
             <Link to="/" className="site-header__drawer-brand" onClick={closeMenu}>
-              <img src={logoImage} alt="" className="site-header__logo" />
-              <span>ЕнотМани</span>
+              <img src={brandLogo} alt="" className="site-header__logo" />
+              <span>{brandName}</span>
             </Link>
             <button
               type="button"
@@ -606,33 +560,6 @@ const Navbar = () => {
             <NavLink to="/faq" className="site-header__drawer-link" onClick={closeMenu}>
               Вопросы и ответы
             </NavLink>
-            {isAuthenticated ? (
-              <>
-                <NavLink to="/account" className="site-header__drawer-link" onClick={closeMenu}>
-                  Личный кабинет
-                </NavLink>
-                <button
-                  type="button"
-                  className="site-header__drawer-fav"
-                  onClick={() => {
-                    closeMenu();
-                    logout();
-                    navigate('/login');
-                  }}
-                >
-                  Выйти
-                </button>
-              </>
-            ) : (
-              <>
-                <NavLink to="/login" className="site-header__drawer-link" onClick={closeMenu}>
-                  Войти
-                </NavLink>
-                <NavLink to="/register" className="site-header__drawer-link" onClick={closeMenu}>
-                  Регистрация
-                </NavLink>
-              </>
-            )}
           </nav>
           <button
             type="button"

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useFavorites } from '../hooks/useFavorites';
 import { enrichOffers } from '../utils/offers';
+import { getApplyLabel, trackApplyClick } from '../utils/applyCta';
 import HeartIcon from './HeartIcon';
 import './CatalogPage.css';
 
@@ -116,6 +117,7 @@ const CatalogPage = ({
 
   const columns = COLUMNS[variant] || COLUMNS.loan;
   const sortOptions = SORT_OPTIONS[variant] || SORT_OPTIONS.loan;
+  const applyLabel = getApplyLabel(catalogPath || variant);
 
   const normalized = useMemo(
     () =>
@@ -317,7 +319,25 @@ const CatalogPage = ({
                     ))}
                     <td>
                       <div className="catalog-actions">
-                        <Link to={`/offer/${item.slug}`} className="catalog-btn">
+                        {applyLabel && item.link ? (
+                          <a
+                            href={item.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="catalog-btn catalog-btn--apply"
+                            onClick={() =>
+                              trackApplyClick({
+                                productSlug: item.slug,
+                                bankName: item.bank || item.title,
+                                categorySlug: catalogPrefix,
+                                source: 'catalog',
+                              })
+                            }
+                          >
+                            {applyLabel}
+                          </a>
+                        ) : null}
+                        <Link to={`/offer/${item.slug}`} className="catalog-btn catalog-btn--ghost">
                           Подробнее
                         </Link>
                         <button
@@ -363,9 +383,29 @@ const CatalogPage = ({
                   </button>
                 </div>
                 <div className="catalog-card__grid">{renderMobileFacts(item)}</div>
-                <Link to={`/offer/${item.slug}`} className="catalog-btn catalog-btn--block">
-                  Подробнее
-                </Link>
+                <div className="catalog-card__actions">
+                  {applyLabel && item.link ? (
+                    <a
+                      href={item.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="catalog-btn catalog-btn--block catalog-btn--apply"
+                      onClick={() =>
+                        trackApplyClick({
+                          productSlug: item.slug,
+                          bankName: item.bank || item.title,
+                          categorySlug: catalogPrefix,
+                          source: 'catalog-mobile',
+                        })
+                      }
+                    >
+                      {applyLabel}
+                    </a>
+                  ) : null}
+                  <Link to={`/offer/${item.slug}`} className="catalog-btn catalog-btn--block catalog-btn--ghost">
+                    Подробнее
+                  </Link>
+                </div>
               </article>
             );
           })}

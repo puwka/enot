@@ -39,6 +39,8 @@ const splitParagraphs = (text) =>
     .map((row) => row.trim())
     .filter(Boolean);
 
+const looksLikeHtml = (value = '') => /<\/?[a-z][\s\S]*>/i.test(String(value || ''));
+
 const resolveSection = (offer) => getSectionByCatalogPath(offer.catalogPath) || null;
 
 const buildConditionRows = (offer, section) => {
@@ -143,9 +145,12 @@ export const buildOfferContent = (offer) => {
       ? 'Расчётный счёт'
       : offer.catalogLabel || 'Предложение');
 
-  const main = description
-    ? splitParagraphs(description)
-    : [`${offer.title} — предложение в разделе «${offer.catalogLabel || 'каталог'}».`];
+  const descriptionIsHtml = looksLikeHtml(description);
+  const main = descriptionIsHtml
+    ? []
+    : description
+      ? splitParagraphs(description)
+      : [`${offer.title} — предложение в разделе «${offer.catalogLabel || 'каталог'}».`];
 
   const conditions = buildConditionRows(offer, section);
   const withFallbackConditions =
@@ -163,6 +168,7 @@ export const buildOfferContent = (offer) => {
     heroLead: attrs.lead || '',
     specs: buildSpecs(offer, section),
     main,
+    mainHtml: descriptionIsHtml ? description : '',
     conditions: withFallbackConditions,
     advantages,
     mainInfo: mainInfo ? splitParagraphs(mainInfo) : [],

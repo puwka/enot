@@ -406,6 +406,29 @@
   min-height: 44px;
 }
 
+.catalog-btn--apply {
+  background: #12b5a2;
+  color: #fff;
+  border-color: #12b5a2;
+}
+
+.catalog-btn--apply:hover {
+  background: #0d9b8a;
+  border-color: #0d9b8a;
+  color: #fff;
+}
+
+.catalog-btn--ghost {
+  background: #fff;
+  color: #0b1739;
+  border: 1px solid #d5dce8;
+}
+
+.catalog-card__actions {
+  display: grid;
+  gap: 8px;
+}
+
 .catalog-fav {
   display: inline-flex;
   align-items: center;

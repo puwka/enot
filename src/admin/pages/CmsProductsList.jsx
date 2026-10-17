@@ -137,7 +137,7 @@ const CmsProductsList = ({ sectionKey }) => {
                         className="admin-btn admin-btn--ghost"
                         onClick={() => navigate(`${section.listPath}/${editId}`)}
                       >
-                        Открыть
+                        Редактировать
                       </button>
                       {item.status !== 'published' ? (
                         <button

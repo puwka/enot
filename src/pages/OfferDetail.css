@@ -143,6 +143,31 @@
   grid-template-columns: 1fr;
 }
 
+.offer-main-html {
+  color: #4b5568;
+  font-size: 0.98rem;
+  line-height: 1.55;
+}
+
+.offer-main-html p,
+.offer-main-html ul,
+.offer-main-html ol,
+.offer-main-html h3 {
+  margin: 0 0 10px;
+}
+
+.offer-main-html ul,
+.offer-main-html ol {
+  padding-left: 1.2em;
+}
+
+.offer-main-html p:last-child,
+.offer-main-html ul:last-child,
+.offer-main-html ol:last-child,
+.offer-main-html h3:last-child {
+  margin-bottom: 0;
+}
+
 .offer-main-text p {
   margin: 0 0 10px;
   color: #4b5568;

@@ -3,6 +3,7 @@ import logoImage from '../images/logo.png';
 import vkIcon from '../images/vkontakte.png';
 import tgIcon from '../images/telega.png';
 import maxIcon from '../images/max.png';
+import { useSiteSettings } from '../context/SiteSettingsContext';
 import './Footer.css';
 
 const PRODUCT_LINKS = [
@@ -23,38 +24,46 @@ const INFO_LINKS = [
   { to: '/faq', label: 'Вопросы и ответы' },
 ];
 
-const SOCIAL_LINKS = [
-  { href: 'https://t.me/enot_mani', src: tgIcon, label: 'Telegram' },
-  { href: 'https://vk.com/skupka_59_perm', src: vkIcon, label: 'ВКонтакте' },
-  { href: 'https://max.ru/join/ABBu3RDHXvg7o3V7RB0i0JE1rxw2ZYTbkEzYAliHJo4', src: maxIcon, label: 'MAX' },
-];
-
 const FooterBar = () => {
+  const { settings } = useSiteSettings();
+  const brand = settings?.brand || {};
+  const logo = brand.logo_url || logoImage;
+  const name = brand.name || 'ЕнотМани';
+  const desc =
+    brand.footer_text ||
+    'Сервис сравнения финансовых продуктов. Выбирайте лучшее и экономьте время и деньги.';
+
+  const socials = [
+    { href: brand.telegram_url, src: tgIcon, label: 'Telegram' },
+    { href: brand.vk_url, src: vkIcon, label: 'ВКонтакте' },
+    { href: brand.max_url, src: maxIcon, label: 'MAX' },
+  ].filter((item) => item.href);
+
   return (
     <footer className="site-footer">
       <div className="site-footer__main container">
         <div className="site-footer__brand">
           <Link to="/" className="site-footer__logo-link">
-            <img src={logoImage} alt="ЕнотМани" className="site-footer__logo" />
-            <span className="site-footer__brand-name">ЕнотМани</span>
+            <img src={logo} alt={name} className="site-footer__logo" />
+            <span className="site-footer__brand-name">{name}</span>
           </Link>
-          <p className="site-footer__desc">
-            Сервис сравнения финансовых продуктов. Выбирайте лучшее и экономьте время и деньги.
-          </p>
-          <div className="site-footer__social">
-            {SOCIAL_LINKS.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="site-footer__social-link"
-                aria-label={item.label}
-              >
-                <img src={item.src} alt="" />
-              </a>
-            ))}
-          </div>
+          <p className="site-footer__desc">{desc}</p>
+          {socials.length ? (
+            <div className="site-footer__social">
+              {socials.map((item) => (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="site-footer__social-link"
+                  aria-label={item.label}
+                >
+                  <img src={item.src} alt="" />
+                </a>
+              ))}
+            </div>
+          ) : null}
         </div>
 
         <div className="site-footer__col">
@@ -77,18 +86,6 @@ const FooterBar = () => {
               </li>
             ))}
           </ul>
-        </div>
-      </div>
-
-      <div className="site-footer__bottom">
-        <div className="site-footer__bottom-inner container">
-          <div className="site-footer__meta">
-            <p className="site-footer__copy">© ЕнотМани 2026</p>
-            <div className="site-footer__meta-links">
-              <Link to="/terms">Пользовательское соглашение</Link>
-              <Link to="/privacy">Политика конфиденциальности</Link>
-            </div>
-          </div>
         </div>
       </div>
     </footer>

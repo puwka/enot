@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Calculator from '../components/Calculator';
 import { useFavorites } from '../hooks/useFavorites';
+import { useSiteSettings } from '../context/SiteSettingsContext';
 import HeartIcon from '../components/HeartIcon';
 import heroMascot from '../img_main/image-edited-free (carve.photos).png';
 import heroMascotMobile from '../images/enot__png.png';
@@ -12,6 +13,7 @@ import catEducationIcon from '../img_main/cat-education.svg';
 import catServicesIcon from '../img_main/cat-services.svg';
 import catShopsIcon from '../img_main/cat-shops.svg';
 import { fetchCatalogProducts } from '../data/productsRuntimeApi';
+import { getApplyLabel, trackApplyClick } from '../utils/applyCta';
 import articleCredits from '../img_main/article-credits.png';
 import articleCards from '../img_main/article-cards.png';
 import articleSecurity from '../img_main/article-security.png';
@@ -100,11 +102,14 @@ const Home = () => {
   const [cmsTabItems, setCmsTabItems] = useState({});
   const [tabsReady, setTabsReady] = useState({});
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { settings } = useSiteSettings();
+  const mascotUrl = settings?.brand?.mascot_url || '';
   const baseTab = OFFER_TABS[activeTab];
   const current = {
     ...baseTab,
-    items: tabsReady[activeTab] ? cmsTabItems[activeTab] || [] : [],
+    items: tabsReady[activeTab] ? (cmsTabItems[activeTab] || []).slice(0, 4) : [],
   };
+  const applyLabel = getApplyLabel(activeTab);
 
   const favoritePayload = (item) => ({
     title: item.title || item.bank,
@@ -219,9 +224,9 @@ const Home = () => {
           <div className="home-hero__stage">
             <div className="home-hero__visual">
               <picture className="home-hero__mascot-wrap">
-                <source media="(max-width: 768px)" srcSet={heroMascotMobile} />
+                {!mascotUrl ? <source media="(max-width: 768px)" srcSet={heroMascotMobile} /> : null}
                 <img
-                  src={heroMascot}
+                  src={mascotUrl || heroMascot}
                   alt=""
                   className="home-hero__mascot"
                   aria-hidden="true"
@@ -380,115 +385,69 @@ const Home = () => {
           {!current.items.length ? (
             <div className="home-offers-empty">
               {tabsReady[activeTab]
-                ? 'Пока нет продуктов с галочкой «Показывать в Лучших предложениях». Откройте продукт в админке, включите галочку, статус «Опубликовано» и «Показывать на сайте», затем сохраните.'
+                ? 'Пока нет продуктов с галочкой «Показывать в Лучших предложениях». Откройте продукт в админке, включите галочку и сохраните.'
                 : 'Загрузка предложений…'}
             </div>
-          ) : null}
-
-          <div className="home-table-wrap" key={activeTab} hidden={!current.items.length}>
-            <table className="home-table">
-              <thead>
-                <tr>
-                  <th>Название</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                {current.items.map((item, index) => {
-                  const payload = favoritePayload(item);
-                  const fav = isFavorite(payload);
-                  const detailTo = item.slug ? `/offer/${encodeURIComponent(item.slug)}` : null;
-                  return (
-                  <tr
+          ) : (
+            <div className="home-best-grid" key={activeTab}>
+              {current.items.map((item, index) => {
+                const payload = favoritePayload(item);
+                const fav = isFavorite(payload);
+                const detailTo = item.slug ? `/offer/${encodeURIComponent(item.slug)}` : null;
+                return (
+                  <article
                     key={`${activeTab}-${item.slug || item.bank}-${index}`}
-                    className="home-table__row-anim"
+                    className="home-best-card"
                     style={{ '--row-delay': `${index * 55}ms` }}
                   >
-                    <td>
-                      <div className="home-table__bank">
-                        <span className="home-table__num">{index + 1}</span>
-                        {item.image ? <img src={item.image} alt="" /> : null}
-                        <div>
-                          <strong>{item.bank}</strong>
-                          <span>{item.type}</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="home-table__actions">
-                        {detailTo ? (
-                          <Link to={detailTo} className="home-btn home-btn--primary home-btn--sm">
-                            Подробнее
-                          </Link>
-                        ) : (
-                          <a href={item.link} target="_blank" rel="noopener noreferrer" className="home-btn home-btn--primary home-btn--sm">
-                            Подробнее
-                          </a>
-                        )}
-                        <button
-                          type="button"
-                          className={`home-fav${fav ? ' is-active' : ''}`}
-                          aria-label={fav ? 'Убрать из избранного' : 'В избранное'}
-                          aria-pressed={fav}
-                          onClick={() => toggleFavorite(payload)}
+                    <div className="home-best-card__top">
+                      <span className="home-best-card__num">{index + 1}</span>
+                      {item.image ? <img src={item.image} alt="" className="home-best-card__logo" /> : null}
+                      <button
+                        type="button"
+                        className={`home-fav${fav ? ' is-active' : ''}`}
+                        aria-label={fav ? 'Убрать из избранного' : 'В избранное'}
+                        aria-pressed={fav}
+                        onClick={() => toggleFavorite(payload)}
+                      >
+                        <HeartIcon filled={fav} size={18} />
+                      </button>
+                    </div>
+                    <h3 className="home-best-card__title">{item.bank}</h3>
+                    {item.type ? <p className="home-best-card__type">{item.type}</p> : null}
+                    <div className="home-best-card__actions">
+                      {applyLabel && item.link ? (
+                        <a
+                          href={item.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="home-btn home-btn--primary home-btn--sm"
+                          onClick={() =>
+                            trackApplyClick({
+                              productSlug: item.slug,
+                              bankName: item.bank,
+                              categorySlug: baseTab.category,
+                              source: 'home-best',
+                            })
+                          }
                         >
-                          <HeartIcon filled={fav} size={18} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="home-offer-mobile" key={`m-${activeTab}`} hidden={!current.items.length}>
-            {current.items.map((item, index) => {
-              const detailTo = item.slug ? `/offer/${encodeURIComponent(item.slug)}` : null;
-              const payload = favoritePayload(item);
-              const fav = isFavorite(payload);
-              return (
-              <article
-                key={`m-${activeTab}-${item.slug || item.bank}-${index}`}
-                className="home-offer-mobile__card home-table__row-anim"
-                style={{ '--row-delay': `${index * 55}ms` }}
-              >
-                <div className="home-table__bank">
-                  <span className="home-table__num">{index + 1}</span>
-                  {item.image ? <img src={item.image} alt="" /> : null}
-                  <div>
-                    <strong>{item.bank}</strong>
-                    <span>{item.type}</span>
-                  </div>
-                </div>
-                <div className="home-table__actions home-table__actions--mobile">
-                  {detailTo ? (
-                    <Link to={detailTo} className="home-btn home-btn--primary home-btn--block">
-                      Подробнее
-                    </Link>
-                  ) : (
-                    <a href={item.link} target="_blank" rel="noopener noreferrer" className="home-btn home-btn--primary home-btn--block">
-                      Подробнее
-                    </a>
-                  )}
-                  <button
-                    type="button"
-                    className={`home-fav${fav ? ' is-active' : ''}`}
-                    aria-label={fav ? 'Убрать из избранного' : 'В избранное'}
-                    aria-pressed={fav}
-                    onClick={() => toggleFavorite(payload)}
-                  >
-                    <HeartIcon filled={fav} size={18} />
-                  </button>
-                </div>
-              </article>
-              );
-            })}
-          </div>
+                          {applyLabel}
+                        </a>
+                      ) : null}
+                      {detailTo ? (
+                        <Link to={detailTo} className="home-btn home-btn--secondary home-btn--sm">
+                          Подробнее
+                        </Link>
+                      ) : null}
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
 
           <p className="home-table__note">
-            В блоке показываются только продукты с галочкой «Показывать в Лучших предложениях на главной» в админке.
+            На главной — до 4 лучших карточек. Полный список и условия — в разделе категории.
           </p>
         </div>
       </section>

@@ -6,7 +6,7 @@ export const ADMIN_ROLES = {
 
 export const ROLE_PERMISSIONS = {
   SUPERADMIN: ['*'],
-  ADMIN: ['content', 'news', 'articles', 'categories', 'faq', 'products', 'users', 'bonuses'],
+  ADMIN: ['content', 'news', 'articles', 'categories', 'faq', 'products', 'settings', 'system', 'media'],
   EDITOR: ['news', 'articles', 'categories', 'faq', 'media'],
 };
 
@@ -47,39 +47,21 @@ export const ADMIN_NAV = [
     ],
   },
   {
-    key: 'users',
-    label: 'Пользователи',
-    children: [
-      { key: 'users-list', path: '/admin/users', label: 'Пользователи', permission: 'users' },
-      { key: 'applications', path: '/admin/applications', label: 'Заявки', permission: 'users' },
-      { key: 'bonuses', path: '/admin/bonuses', label: 'Бонусы', permission: 'bonuses' },
-      { key: 'referrals', path: '/admin/referrals', label: 'Рефералы', permission: 'users' },
-    ],
-  },
-  {
     key: 'media',
     label: 'Медиа',
-    children: [
-      { key: 'images', path: '/admin/media', label: 'Изображения', permission: 'media' },
-    ],
+    children: [{ key: 'images', path: '/admin/media', label: 'Изображения', permission: 'media' }],
   },
   {
     key: 'settings',
     label: 'Настройки',
     children: [
-      { key: 'settings-site', path: '/admin/settings/site', label: 'Сайт', permission: 'settings' },
-      { key: 'settings-header', path: '/admin/settings/header', label: 'Header', permission: 'settings' },
-      { key: 'settings-footer', path: '/admin/settings/footer', label: 'Footer', permission: 'settings' },
-      { key: 'settings-menu', path: '/admin/settings/menu', label: 'Меню', permission: 'settings' },
-      { key: 'settings-seo', path: '/admin/settings/seo', label: 'SEO', permission: 'settings' },
+      { key: 'settings-site', path: '/admin/settings/site', label: 'Сайт / тема / SEO', permission: 'settings' },
     ],
   },
   {
     key: 'system',
     label: 'Система',
-    children: [
-      { key: 'audit', path: '/admin/system/audit', label: 'Журнал действий', permission: 'system' },
-    ],
+    children: [{ key: 'audit', path: '/admin/system/audit', label: 'Журнал действий', permission: 'system' }],
   },
 ];
 
@@ -109,9 +91,11 @@ export const findNavItem = (pathname) => {
   const items = flattenNav(ADMIN_NAV);
   const exact = items.find((item) => item.path === pathname);
   if (exact) return exact;
-  return items
-    .filter((item) => item.path !== '/admin' && pathname.startsWith(`${item.path}/`))
-    .sort((a, b) => b.path.length - a.path.length)[0] || null;
+  return (
+    items
+      .filter((item) => item.path !== '/admin' && pathname.startsWith(`${item.path}/`))
+      .sort((a, b) => b.path.length - a.path.length)[0] || null
+  );
 };
 
 export const getBreadcrumbs = (pathname) => {

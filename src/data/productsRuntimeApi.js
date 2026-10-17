@@ -37,7 +37,7 @@ const mapProduct = (row) => {
     benefit1: row.benefit1 || advantages[0] || '',
     benefit2: row.benefit2 || advantages[1] || '',
     benefit3: row.benefit3 || advantages[2] || '',
-    spec: row.spec || '',
+    spec: row.spec || row.product_type || '',
     catalogPath: row.catalogPath || '/loans',
     catalogLabel: row.catalogLabel || 'Продукты',
     variant: row.variant || 'loan',

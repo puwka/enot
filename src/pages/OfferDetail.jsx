@@ -7,6 +7,7 @@ import {
   fetchRelatedOffersByCategory,
 } from '../data/productsRuntimeApi';
 import { buildOfferContent } from '../utils/offers';
+import { getApplyLabel, trackApplyClick } from '../utils/applyCta';
 import { useFavorites } from '../hooks/useFavorites';
 import HeartIcon from '../components/HeartIcon';
 import './OfferDetail.css';
@@ -87,6 +88,7 @@ const OfferDetail = () => {
   const showConditions = content.showConditions && (isFreeformConditions ? Boolean(freeformText) : true);
   const showAdvantages = content.showAdvantages && content.advantages.length > 0;
   const showBottomMain = content.showBottomMainInfo && content.mainInfo.length > 0;
+  const applyLabel = getApplyLabel(offer.catalogPath || offer.variant);
 
   return (
     <main className="offer">
@@ -105,14 +107,24 @@ const OfferDetail = () => {
             <h1 className="offer-hero__title">{offer.title}</h1>
             {content.heroLead ? <p className="offer-hero__lead">{content.heroLead}</p> : null}
             <div className="offer-hero__actions">
-              <a
-                href={offer.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="offer-btn offer-btn--primary"
-              >
-                {offer.ctaLabel}
-              </a>
+              {applyLabel && offer.link ? (
+                <a
+                  href={offer.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="offer-btn offer-btn--primary"
+                  onClick={() =>
+                    trackApplyClick({
+                      productSlug: offer.slug,
+                      bankName: offer.bank || offer.title,
+                      categorySlug: CATALOG_PATH_TO_CATEGORY_SLUG[offer.catalogPath] || '',
+                      source: 'offer-detail',
+                    })
+                  }
+                >
+                  {applyLabel}
+                </a>
+              ) : null}
               <button
                 type="button"
                 className={`offer-btn offer-btn--ghost${fav ? ' is-active' : ''}`}
@@ -141,9 +153,11 @@ const OfferDetail = () => {
         <section className={`offer-grid${showConditions ? '' : ' offer-grid--single'}`}>
           <div className="offer-panel">
             <h2>Основная информация</h2>
-            {content.main.map((paragraph) => (
-              <p key={paragraph}>{paragraph}</p>
-            ))}
+            {content.mainHtml ? (
+              <div className="offer-main-html" dangerouslySetInnerHTML={{ __html: content.mainHtml }} />
+            ) : (
+              content.main.map((paragraph) => <p key={paragraph}>{paragraph}</p>)
+            )}
           </div>
 
           {showConditions ? (

@@ -9,6 +9,7 @@ import authRoutes from './routes/auth.js';
 import catalogRoutes from './routes/catalog.js';
 import adminRoutes from './routes/admin.js';
 import uploadRoutes, { uploadsDir } from './routes/upload.js';
+import siteRoutes from './routes/site.js';
 
 const app = express();
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -23,6 +24,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/catalog', catalogRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/admin/upload', uploadRoutes);
+app.use('/api/site', siteRoutes);
 
 if (config.nodeEnv === 'production') {
   app.use((req, res, next) => {

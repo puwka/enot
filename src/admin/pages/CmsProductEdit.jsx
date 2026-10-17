@@ -6,6 +6,7 @@ import { getSiteProductBySlug, getSiteBanks, mergeBankItems } from '../cms/siteC
 import { resolveProductImage } from '../../data/productImages';
 import { slugify, ensureProductSlug } from '../cms/cmsConstants';
 import CmsImageUpload from '../cms/CmsImageUpload';
+import RichTextEditor from '../cms/RichTextEditor';
 import { CmsAlert, CmsLoading, StatusBadge } from '../cms/CmsUi';
 import { TERM_UNITS, normalizeTermUnit } from '../../utils/termUnit';
 import '../cms/Cms.css';
@@ -523,14 +524,12 @@ const CmsProductEdit = ({ sectionKey }) => {
 
           <div className="cms-form-section">
             <h3 className="cms-form-section__title">Контент на сайте</h3>
-            <label className="cms-field">
-              <span>{descriptionLabel} → блок «Основная информация»</span>
-              <textarea
-                rows={4}
-                value={form.description}
-                onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
-              />
-            </label>
+            <RichTextEditor
+              label={`${descriptionLabel} → блок «Основная информация»`}
+              value={form.description}
+              rows={6}
+              onChange={(html) => setForm((prev) => ({ ...prev, description: html }))}
+            />
 
             {showAdvantagesField ? (
               <label className="cms-field">
