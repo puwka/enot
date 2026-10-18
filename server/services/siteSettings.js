@@ -66,6 +66,9 @@ export const upsertSetting = async (key, value) => {
      RETURNING key, value, updated_at`,
     [key, JSON.stringify(merged)]
   );
+  if (!rows[0]) {
+    throw new Error(`SETTINGS_UPSERT_FAILED:${key}`);
+  }
   return rows[0];
 };
 
@@ -73,7 +76,7 @@ export const saveSettingsBundle = async (bundle, adminId = null) => {
   const keys = ['brand', 'seo', 'analytics', 'app'];
   const saved = {};
   for (const key of keys) {
-    if (bundle?.[key]) {
+    if (bundle?.[key] && typeof bundle[key] === 'object') {
       saved[key] = (await upsertSetting(key, bundle[key])).value;
     } else {
       saved[key] = (await getPublicSettings())[key];
@@ -83,7 +86,7 @@ export const saveSettingsBundle = async (bundle, adminId = null) => {
     await query(
       `INSERT INTO public.audit_logs (admin_actor_id, action, entity_type, entity_id, after_data)
        VALUES ($1, 'update', 'site_settings', NULL, $2::jsonb)`,
-      [adminId, JSON.stringify({ keys: Object.keys(saved) })]
+      [adminId || null, JSON.stringify({ keys: Object.keys(saved) })]
     );
   } catch {
     /* ignore audit write failures */

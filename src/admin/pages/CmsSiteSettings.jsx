@@ -69,8 +69,17 @@ const CmsSiteSettings = () => {
         body: { settings: form },
       });
       setMessage('Настройки сохранены. Обновите главную страницу, чтобы увидеть изменения.');
-    } catch {
-      setError('Не удалось сохранить настройки.');
+    } catch (err) {
+      if (err?.code === 'FORBIDDEN') {
+        setError(
+          err?.message ||
+            'Нет прав на сохранение. На сервере выполните: npm run db:migrate и перезапустите API.'
+        );
+      } else if (err?.code === 'INVALID_SESSION') {
+        setError('Сессия истекла. Выйдите и войдите в админку снова.');
+      } else {
+        setError(err?.message || 'Не удалось сохранить настройки.');
+      }
     } finally {
       setSaving(false);
     }

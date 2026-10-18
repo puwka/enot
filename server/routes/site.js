@@ -11,19 +11,80 @@ const getToken = (req) => {
   return req.headers['x-admin-token'] || '';
 };
 
-const requireAdmin = async (req, res, permission = 'settings') => {
+/** Permissions that older DBs (pre-020) may not grant via RPC yet */
+const LEGACY_ADMIN_EXTRA = new Set(['settings', 'system', 'media']);
+
+const requireAdminWithReq = async (req, permission = 'settings') => {
   const token = getToken(req);
-  await adminAuthorize(token, permission);
-  const session = await adminSession(token);
-  return session?.admin || session?.user || null;
+  if (!token) {
+    const err = new Error('INVALID_SESSION');
+    err.code = 'INVALID_SESSION';
+    throw err;
+  }
+
+  let session;
+  try {
+    session = await adminSession(token);
+  } catch {
+    const err = new Error('INVALID_SESSION');
+    err.code = 'INVALID_SESSION';
+    throw err;
+  }
+
+  const admin = session?.admin || null;
+  if (!admin) {
+    const err = new Error('INVALID_SESSION');
+    err.code = 'INVALID_SESSION';
+    throw err;
+  }
+
+  const role = String(admin.role || '');
+  if (role === 'SUPERADMIN') return admin;
+
+  try {
+    await adminAuthorize(token, permission);
+    return admin;
+  } catch (error) {
+    const message = String(error?.message || '');
+    if (
+      role === 'ADMIN' &&
+      LEGACY_ADMIN_EXTRA.has(permission || '') &&
+      /FORBIDDEN/i.test(message)
+    ) {
+      return admin;
+    }
+    if (/INVALID_SESSION/i.test(message)) {
+      const err = new Error('INVALID_SESSION');
+      err.code = 'INVALID_SESSION';
+      throw err;
+    }
+    const err = new Error('FORBIDDEN');
+    err.code = 'FORBIDDEN';
+    throw err;
+  }
+};
+
+const sendAuthError = (res, error) => {
+  const code = error?.code || '';
+  const message = String(error?.message || '');
+  if (code === 'INVALID_SESSION' || /INVALID_SESSION/i.test(message)) {
+    return res.status(401).json({ error: 'INVALID_SESSION' });
+  }
+  if (code === 'FORBIDDEN' || /FORBIDDEN/i.test(message)) {
+    return res.status(403).json({
+      error: 'FORBIDDEN',
+      message: 'Нет прав на эту операцию. Выполните npm run db:migrate на сервере.',
+    });
+  }
+  return res.status(500).json({ error: 'REQUEST_FAILED', message: message.slice(0, 300) });
 };
 
 router.get('/settings', async (_req, res) => {
   try {
     const settings = await getPublicSettings();
     res.json({ settings });
-  } catch {
-    res.status(500).json({ error: 'REQUEST_FAILED' });
+  } catch (error) {
+    res.status(500).json({ error: 'REQUEST_FAILED', message: String(error?.message || '').slice(0, 200) });
   }
 });
 
@@ -45,55 +106,51 @@ router.post('/clicks', async (req, res) => {
 
 router.get('/admin/settings', async (req, res) => {
   try {
-    await requireAdmin(req, res, 'settings');
+    await requireAdminWithReq(req, 'settings');
     const settings = await getAdminSettingsBundle();
     res.json({ settings });
   } catch (error) {
-    const message = String(error?.message || '');
-    if (/INVALID_SESSION/i.test(message)) return res.status(401).json({ error: 'INVALID_SESSION' });
-    if (/FORBIDDEN/i.test(message)) return res.status(403).json({ error: 'FORBIDDEN' });
-    return res.status(500).json({ error: 'REQUEST_FAILED' });
+    return sendAuthError(res, error);
   }
 });
 
 router.put('/admin/settings', async (req, res) => {
   try {
-    const admin = await requireAdmin(req, res, 'settings');
+    const admin = await requireAdminWithReq(req, 'settings');
     const settings = await saveSettingsBundle(req.body?.settings || req.body || {}, admin?.id || null);
     res.json({ settings });
   } catch (error) {
-    const message = String(error?.message || '');
-    if (/INVALID_SESSION/i.test(message)) return res.status(401).json({ error: 'INVALID_SESSION' });
-    if (/FORBIDDEN/i.test(message)) return res.status(403).json({ error: 'FORBIDDEN' });
-    return res.status(500).json({ error: 'REQUEST_FAILED', message });
+    return sendAuthError(res, error);
   }
 });
 
 router.get('/admin/stats', async (req, res) => {
   try {
-    await requireAdmin(req, res, null);
-    const [catalog, clicks] = await Promise.all([getCatalogStats(), getClickStats(30)]);
+    await requireAdminWithReq(req, null);
+    const [catalog, clicks] = await Promise.all([
+      getCatalogStats().catch(() => []),
+      getClickStats(30).catch(() => ({
+        days: 30,
+        totals: { total_clicks: 0, clicks_today: 0, clicks_week: 0 },
+        byBank: [],
+        byCategory: [],
+      })),
+    ]);
     res.json({ catalog, clicks });
   } catch (error) {
-    const message = String(error?.message || '');
-    if (/INVALID_SESSION/i.test(message)) return res.status(401).json({ error: 'INVALID_SESSION' });
-    if (/FORBIDDEN/i.test(message)) return res.status(403).json({ error: 'FORBIDDEN' });
-    return res.status(500).json({ error: 'REQUEST_FAILED' });
+    return sendAuthError(res, error);
   }
 });
 
 router.get('/admin/audit', async (req, res) => {
   try {
-    await requireAdmin(req, res, 'system');
+    await requireAdminWithReq(req, 'system');
     const limit = Math.min(200, Number(req.query.limit) || 100);
     const offset = Math.max(0, Number(req.query.offset) || 0);
     const items = await getAuditLogs({ limit, offset });
     res.json({ items });
   } catch (error) {
-    const message = String(error?.message || '');
-    if (/INVALID_SESSION/i.test(message)) return res.status(401).json({ error: 'INVALID_SESSION' });
-    if (/FORBIDDEN/i.test(message)) return res.status(403).json({ error: 'FORBIDDEN' });
-    return res.status(500).json({ error: 'REQUEST_FAILED' });
+    return sendAuthError(res, error);
   }
 });
 
