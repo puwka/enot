@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { apiFetch } from '../../lib/apiClient';
+import { getAdminToken } from '../adminApi';
 import { useAdminAuth } from '../AdminAuthContext';
 import { useSiteSettings } from '../../context/SiteSettingsContext';
 
@@ -126,17 +127,24 @@ const BarList = ({ items, emptyText, valueKey = 'clicks' }) => {
 };
 
 const AdminDashboard = () => {
-  const { token } = useAdminAuth();
+  const { token, loading: authLoading } = useAdminAuth();
   const { settings } = useSiteSettings();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   const load = useCallback(async () => {
+    const adminToken = token || getAdminToken();
+    if (!adminToken) {
+      setData(null);
+      setError('Сессия истекла. Войдите снова.');
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError('');
     try {
-      const payload = await apiFetch('/site/admin/stats', { adminToken: token });
+      const payload = await apiFetch('/site/admin/stats', { adminToken });
       setData(payload);
     } catch (err) {
       setData(null);
@@ -153,8 +161,9 @@ const AdminDashboard = () => {
   }, [token]);
 
   useEffect(() => {
+    if (authLoading) return;
     load();
-  }, [load]);
+  }, [authLoading, load]);
 
   const catalog = data?.catalog || [];
   const clicks = data?.clicks || { totals: {}, byBank: [], byCategory: [] };

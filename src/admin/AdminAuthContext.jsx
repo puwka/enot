@@ -14,11 +14,13 @@ const AdminAuthContext = createContext(null);
 
 export const AdminAuthProvider = ({ children }) => {
   const [admin, setAdmin] = useState(null);
+  const [token, setToken] = useState(() => getAdminToken());
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
-    const token = getAdminToken();
-    if (!token) {
+    const currentToken = getAdminToken();
+    setToken(currentToken || '');
+    if (!currentToken) {
       setAdmin(null);
       setLoading(false);
       return null;
@@ -26,10 +28,12 @@ export const AdminAuthProvider = ({ children }) => {
     try {
       const data = await adminSession();
       setAdmin(data.admin);
+      setToken(getAdminToken());
       setLoading(false);
       return data.admin;
     } catch {
       clearAdminToken();
+      setToken('');
       setAdmin(null);
       setLoading(false);
       return null;
@@ -43,6 +47,7 @@ export const AdminAuthProvider = ({ children }) => {
   const login = useCallback(async (email, password) => {
     const data = await adminLogin(email, password);
     setAdminToken(data.token);
+    setToken(data.token || '');
     setAdmin(data.admin);
     return data.admin;
   }, []);
@@ -53,6 +58,7 @@ export const AdminAuthProvider = ({ children }) => {
     } catch {
     } finally {
       clearAdminToken();
+      setToken('');
       setAdmin(null);
     }
   }, []);
@@ -65,6 +71,7 @@ export const AdminAuthProvider = ({ children }) => {
   const value = useMemo(
     () => ({
       admin,
+      token,
       loading,
       isAuthenticated: Boolean(admin),
       role: admin?.role || null,
@@ -76,7 +83,7 @@ export const AdminAuthProvider = ({ children }) => {
       canAccessSection: (sectionKey) => canAccessSection(admin?.role, sectionKey),
       allowedSections: getAllowedSections(admin?.role),
     }),
-    [admin, loading, login, logout, refresh, authorize]
+    [admin, token, loading, login, logout, refresh, authorize]
   );
 
   return <AdminAuthContext.Provider value={value}>{children}</AdminAuthContext.Provider>;

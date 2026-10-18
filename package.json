@@ -34,7 +34,9 @@
     "db:migrate": "node scripts/db.mjs migrate",
     "db:seed": "node scripts/db.mjs seed",
     "db:check": "node scripts/db.mjs check",
-    "pwa:icons": "node scripts/generate-pwa-icons.mjs"
+    "pwa:icons": "node scripts/generate-pwa-icons.mjs",
+    "setup": "bash install.sh",
+    "update": "bash update.sh"
   },
   "devDependencies": {
     "sharp": "^0.33.5",

@@ -8,7 +8,7 @@ dotenv.config();
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 export const getDatabaseConfig = () => {
-  if (process.env.DATABASE_URL) {
+  if (process.env.DATABASE_URL && String(process.env.DATABASE_URL).trim()) {
     return {
       connectionString: process.env.DATABASE_URL,
       ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : undefined,

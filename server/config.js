@@ -17,7 +17,7 @@ export const config = {
 };
 
 export const getDatabaseConfig = () => {
-  if (config.databaseUrl) {
+  if (config.databaseUrl && String(config.databaseUrl).trim()) {
     return {
       connectionString: config.databaseUrl,
       ssl: config.databaseSsl ? { rejectUnauthorized: false } : undefined,

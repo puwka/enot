@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { apiFetch } from '../../lib/apiClient';
+import { getAdminToken } from '../adminApi';
 import { useAdminAuth } from '../AdminAuthContext';
 import { CmsAlert, CmsLoading } from '../cms/CmsUi';
 import '../cms/Cms.css';
@@ -26,10 +27,11 @@ const CmsAuditPage = () => {
   const [error, setError] = useState('');
 
   const load = useCallback(async () => {
+    const adminToken = token || getAdminToken();
     setLoading(true);
     setError('');
     try {
-      const data = await apiFetch('/site/admin/audit?limit=150', { adminToken: token });
+      const data = await apiFetch('/site/admin/audit?limit=150', { adminToken });
       setItems(data?.items || []);
     } catch {
       setError('Не удалось загрузить журнал действий.');

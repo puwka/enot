@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { apiFetch } from '../../lib/apiClient';
+import { getAdminToken } from '../adminApi';
 import { useAdminAuth } from '../AdminAuthContext';
 import CmsImageUpload from '../cms/CmsImageUpload';
 import { CmsAlert, CmsLoading } from '../cms/CmsUi';
@@ -32,10 +33,11 @@ const CmsSiteSettings = () => {
   const [message, setMessage] = useState('');
 
   const load = useCallback(async () => {
+    const adminToken = token || getAdminToken();
     setLoading(true);
     setError('');
     try {
-      const data = await apiFetch('/site/admin/settings', { adminToken: token });
+      const data = await apiFetch('/site/admin/settings', { adminToken });
       setForm({
         brand: { ...empty.brand, ...(data?.settings?.brand || {}) },
         seo: { ...empty.seo, ...(data?.settings?.seo || {}) },
@@ -63,9 +65,10 @@ const CmsSiteSettings = () => {
     setError('');
     setMessage('');
     try {
+      const adminToken = token || getAdminToken();
       await apiFetch('/site/admin/settings', {
         method: 'PUT',
-        adminToken: token,
+        adminToken,
         body: { settings: form },
       });
       setMessage('Настройки сохранены. Обновите главную страницу, чтобы увидеть изменения.');
